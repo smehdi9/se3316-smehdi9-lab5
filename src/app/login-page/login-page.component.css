@@ -1,0 +1,23 @@
+.sign-up-menu, .log-in-menu {
+  display: inline-block;
+  margin-right: 100px;
+  margin-left: 40px;
+  margin-bottom: 50px;
+  background-color: #424242;
+  padding: 50px;
+  border-radius: 30px;
+  vertical-align: top;
+}
+
+input {
+  width: 250px;
+  height: 30px;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+label {
+  margin-right: 8px;
+}
