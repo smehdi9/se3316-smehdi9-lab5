@@ -31,7 +31,7 @@ app.get('/api/common/timetable', (req, res) => {
   const resultValidation = schema.validate(req.query);
   if(resultValidation.error) {
     res.status(400).send({
-      "message": "ERR_BAD_BODY"
+      "message": "ERR_BAD_QUERY"
     });
     return;
   }
@@ -81,12 +81,47 @@ app.get('/api/common/timetable', (req, res) => {
 });
 
 
-//
+//For a given subject and catalog_nbr (EXACT MATCH), return the singular timetable entry
+app.get('/api/common/timetable/:subject/:catalog_nbr', (req, res) => {
+  //Input sanitization JOI
+  const schema = joi.object({
+    "subject": joi.string().regex(regexSpecialChars).min(2).max(8).required(),
+    "catalog_nbr": joi.string().regex(regexSpecialChars).min(4).max(5).required()
+  });
+  const resultValidation = schema.validate(req.params);
+  if(resultValidation.error) {
+    res.status(400).send({
+      "message": "ERR_BAD_PARAMS"
+    });
+    return;
+  }
 
+  let subjects = [];
+  let subjectID = req.params.subject;
+  let courseID = req.params.catalog_nbr;
+  for(i = 0; i < timetable.length; i++) {
+    if(subjectID == timetable[i].subject && courseID == timetable[i].catalog_nbr) {
+      subjects.push(timetable[i]);
+    }
+  }
+  //If found, send. Otherwise, send error
+  if(subjects.length > 0) {
+    res.send({
+      "message": "SUCCESS",
+      "content": subjects
+    });
+    return;
+  }
+  else {
+    res.status(404).send({
+      "message": "ERR_RESULT_NOT_FOUND"
+    });
+    return;
+  }
+});
 
 
 // ------------------------------------ OLD ROUTES ----------------------------------------
-
 
 //ROUTES -----------------------------------------
 //1. Get all available subject codes (property name: subject) and descriptions (property name: className)
