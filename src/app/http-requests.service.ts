@@ -25,13 +25,13 @@ export class HttpRequestsService {
     try {
       const response = await fetch(this.serverURL + '/api/user/login', {
         method: "PUT",
-        headers: headersJSON,
-        body: {
+        headers: this.headersJSON,
+        body: JSON.stringify({
           "email": email,
           "password": password
-        }
+        })
       });
-      result = await response.json();
+      let result = await response.json();
       return result;
     } catch(err) { console.log(err) }
   }
@@ -43,14 +43,14 @@ export class HttpRequestsService {
     try {
       const response = await fetch(this.serverURL + '/api/user/signup', {
         method: "POST",
-        headers: headersJSON,
-        body: {
+        headers: this.headersJSON,
+        body: JSON.stringify({
           "email": email,
           "username": username,
           "password": password
-        }
+        })
       });
-      result = await response.json();
+      let result = await response.json();
       return result;
     } catch(err) { console.log(err) }
   }

@@ -19,5 +19,13 @@ input {
 }
 
 label {
-  margin-right: 8px;
+  /*margin-right: 8px;*/
+}
+
+.errormsg {
+  width: 200px;
+  font-size: 14px;
+  color: red;
+  display: flex;
+  overflow: hidden;
 }

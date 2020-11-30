@@ -13,6 +13,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { HomePageComponent } from './home-page/home-page.component';
 import { LoginPageComponent } from './login-page/login-page.component';
+import { HttpRequestsService } from './http-requests.service';
 
 @NgModule({
   declarations: [
@@ -32,7 +33,7 @@ import { LoginPageComponent } from './login-page/login-page.component';
     MatIconModule,
     MatListModule
   ],
-  providers: [],
+  providers: [HttpRequestsService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
