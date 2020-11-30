@@ -50,6 +50,20 @@ app.put('/api/user/login', (req, res) => {
   let login_password = req.body.password;
   for(i = 0; i < user_list.length; i++) {
     if(user_list[i].email == login_email) {
+      //Check if user is verified or not
+      if(!user_list[i].verified) {
+        res.status(403).send({
+          "message": "ERR_USER_UNVERIFIED"
+        });
+        return;
+      }
+      //Check if user is disabled or not
+      if(user_list[i].disabled) {
+        res.status(403).send({
+          "message": "ERR_USER_DISABLED"
+        });
+        return;
+      }
       //Log-in check user password
       if(login_password == user_list[i].password) {
         //Sign JWT
@@ -113,7 +127,8 @@ app.post('/api/user/signup', (req, res) => {
     "password": login_password,
     "username": login_username,
     "admin": false,
-    "verfied": false
+    "verified": true,
+    "disabled": false
   };
   usersDB.get("user_list").push(new_user).write();
 
