@@ -9,7 +9,18 @@ export class LoginPageComponent implements OnInit {
 
   constructor() { }
 
-  ngOnInit(): void {
+  //Get the sign up data, and sign the user up
+  signUpUser() : void  {
+    alert("SIGN UP");
+  }
+
+  //Get log in data, and log the user in
+  logInUser() : void {
+    alert("LOG UP");
+
+  }
+
+  ngOnInit() : void {
   }
 
 }

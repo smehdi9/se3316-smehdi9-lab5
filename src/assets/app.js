@@ -8,17 +8,151 @@ const stringSimilarity = require("string-similarity")
 
 const app = express();
 const timetable = require("./Lab3-timetable-data.json");      //All timetable data
+const secure_info = require("./secure_info.json");
 
-//const schedulesDB = lowdb(new FileSync("schedules.json"));    //The schedules db/json file
-//schedulesDB.defaults({"schedule_list": []}).write();          //All schedules will be stored in schedule_list array
+//The schedules db/json file -----
+const schedulesDB = lowdb(new FileSync("schedule_database.json"));
+schedulesDB.defaults({"schedule_list": []}).write();
 
+//The users db/json file -----
+const usersDB = lowdb(new FileSync("user_database.json"));
+usersDB.defaults({"user_list": []}).write();
+
+//The various regex used in this api
 const regexSpecialChars = /^[^<>:/?#@.!$&'()*+,;=]*$/;
+const regexEmail = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+const regexJWT = /^[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+$/;
 
 //To parse the body of the JSON requests
 app.use(express.json());
-
 //Applying headers to responses (For local hosting, will be removed when committed publicly)
 app.use(cors());
+
+
+//Log into an existing user in the database
+app.put('/api/user/login', (req, res) => {
+  //Input sanitization JOI
+  const schema = joi.object({
+    "email": joi.string().regex(regexEmail).required(),
+    "password": joi.string().regex(regexSpecialChars).min(8).max(30).required()
+  });
+  const resultValidation = schema.validate(req.body);
+  if(resultValidation.error) {
+    res.status(400).send({
+      "message": "ERR_BAD_BODY"
+    });
+    return;
+  }
+
+  //Log in existing user
+  let user_list = usersDB.get("user_list").value();
+  let login_email = req.body.email;
+  let login_password = req.body.password;
+  for(i = 0; i < user_list.length; i++) {
+    if(user_list[i].email == login_email) {
+      //Log-in check user password
+      if(login_password == user_list[i].password) {
+        //Sign JWT
+        let token = jwt.sign({"email": user_list[i].email, "admin": user_list[i].admin}, secure_info.jwt_secure_key);
+        if(token != undefined) {
+          res.send({
+            "message": "SUCCESS",
+            "token": token
+          });
+          return;
+        }
+      }
+      else {
+        res.status(403).send({
+          "message": "ERR_INCORRECT_PASSWORD"
+        });
+        return;
+      }
+    }
+  }
+
+  //If the specified email isn't found, send error
+  res.status(404).send({
+    "message": "ERR_RESULT_NOT_FOUND"
+  });
+});
+
+
+//Sign a new user into the database
+app.post('/api/user/signup', (req, res) => {
+  //Input sanitization JOI
+  const schema = joi.object({
+    "email": joi.string().regex(regexEmail).required(),
+    "password": joi.string().regex(regexSpecialChars).min(8).max(30).required(),
+    "username": joi.string().regex(regexSpecialChars).min(4).max(30).required()
+  });
+  const resultValidation = schema.validate(req.body);
+  if(resultValidation.error) {
+    res.status(400).send({
+      "message": "ERR_BAD_BODY"
+    });
+    return;
+  }
+
+  //Check if EMAIL (only email) exists
+  let user_list = usersDB.get("user_list").value();
+  let login_email = req.body.email;
+  for(i = 0; i < user_list.length; i++) {
+    if(user_list[i].email == login_email) {
+      res.status(404).send({
+        "message": "ERR_EMAIL_TAKEN"
+      });
+      return;
+    }
+  }
+  //If the email doesn't exist, add it to DB
+  let login_password = req.body.password;
+  let login_username = req.body.username;
+  let new_user = {
+    "email": login_email,
+    "password": login_password,
+    "username": login_username,
+    "admin": false,
+    "verfied": false
+  };
+  usersDB.get("user_list").push(new_user).write();
+
+  //Send success message
+  res.send({
+    "message": "SUCCESS"
+  });
+});
+
+
+//Test  ------------------------------------------- TEMPORARY TEMPORARY TEMPORARY TEMPORARY
+app.post('/api/user/test', (req, res) => {
+  //Input sanitization JOI
+  const schema = joi.object({
+    "token": joi.string().regex(regexJWT).required()
+  });
+  const resultValidation = schema.validate(req.body);
+  if(resultValidation.error) {
+    res.status(400).send({
+      "message": "ERR_BAD_BODY"
+    });
+    return;
+  }
+
+  //Verify token
+  let decoded = undefined;   //This will be the token data
+  let test_token = req.body.token;
+  try {
+    decoded = jwt.verify(test_token, secure_info.jwt_secure_key);
+  } catch(err) {
+    res.status(500).send("ERR_SOMETHING_WENT_WRONG");
+    return;
+  }
+
+  res.send({
+    "message": "SUCCESS",
+    "data": decoded
+  });
+});
 
 
 //USE QUERIES WITH OPTIONAL SUBJECT/COURSE ID/COURSE CODE. Not using parameters. Returns limited timetable data, and nothing else.
@@ -119,6 +253,22 @@ app.get('/api/common/timetable/:subject/:catalog_nbr', (req, res) => {
     return;
   }
 });
+
+
+
+
+//HELPER FUNCTIONS --------------------------------------------
+
+
+
+
+
+//INIT -------------------------------------------
+const PORT = 3000;
+app.listen(PORT);
+console.log("Listening on port " + PORT)
+
+
 
 
 // ------------------------------------ OLD ROUTES ----------------------------------------
@@ -482,8 +632,3 @@ function isValidCourseList(course_list) {
   }
   return true;
 }
-
-//INIT -------------------------------------------
-const PORT = 3000;
-app.listen(PORT);
-console.log("Listening on port " + PORT)

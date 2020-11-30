@@ -5,6 +5,9 @@
 /src/assets/Lab3-timetable-data.json
 /src/assets/package-lock.json
 /src/assets/node_modules
+/src/assets/schedule_database.json
+/src/assets/user_database.json
+/src/assets/secure_info.json
 
 # compiled output
 /dist
