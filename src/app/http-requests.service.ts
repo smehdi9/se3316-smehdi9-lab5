@@ -18,6 +18,9 @@ export class HttpRequestsService {
     'Content-Type': 'application/json'
   };
 
+
+  // ----- Account management HTTP requests -----
+
   /* Using /api/user/login
      Will return a message and optionally a token value.
   */
@@ -49,6 +52,49 @@ export class HttpRequestsService {
           "username": username,
           "password": password
         })
+      });
+      let result = await response.json();
+      return result;
+    } catch(err) { console.log(err) }
+  }
+
+
+  // ----- Common HTTP requests -----
+
+  /* Using /api/common/subjects
+     Will return a message and array.
+  */
+  async getAllSubjectCodes() {
+    try {
+      const response = await fetch(this.serverURL + '/api/common/subjects', {
+        method: "GET",
+        headers: this.headersJSON
+      });
+      let result = await response.json();
+      return result;
+    } catch(err) { console.log(err) }
+  }
+
+
+  /* Using /api/common/timetable
+     Will return a message and array.
+  */
+  async getResultsFromQuery(subject: String, catalog_nbr : String) {
+    let subjectQuery = "";
+    let courseQuery = "";
+
+    //Add queries where needed
+    if(subject != undefined && subject != "") {
+      subjectQuery = "subject=" + subject + "&";
+    }
+    if(catalog_nbr != undefined && catalog_nbr != "") {
+      courseQuery = "catalog_nbr=" + catalog_nbr;
+    }
+
+    try {
+      const response = await fetch(this.serverURL + '/api/common/timetable?' + subjectQuery + courseQuery, {
+        method: "GET",
+        headers: this.headersJSON
       });
       let result = await response.json();
       return result;

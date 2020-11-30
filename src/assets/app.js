@@ -29,6 +29,9 @@ app.use(express.json());
 app.use(cors());
 
 
+
+/* --------- ACCOUNT MANAGEMENT ROUTES --------- */
+
 //Log into an existing user in the database
 app.put('/api/user/login', (req, res) => {
   //Input sanitization JOI
@@ -111,17 +114,23 @@ app.post('/api/user/signup', (req, res) => {
   //Check if EMAIL (only email) exists
   let user_list = usersDB.get("user_list").value();
   let login_email = req.body.email;
+  let login_username = req.body.username;
   for(i = 0; i < user_list.length; i++) {
     if(user_list[i].email == login_email) {
-      res.status(404).send({
+      res.status(403).send({
         "message": "ERR_EMAIL_TAKEN"
+      });
+      return;
+    }
+    if(user_list[i].username == login_username) {
+      res.status(403).send({
+        "message": "ERR_USER_TAKEN"
       });
       return;
     }
   }
   //If the email doesn't exist, add it to DB
   let login_password = req.body.password;
-  let login_username = req.body.username;
   let new_user = {
     "email": login_email,
     "password": login_password,
@@ -166,6 +175,29 @@ app.post('/api/user/test', (req, res) => {
   res.send({
     "message": "SUCCESS",
     "data": decoded
+  });
+});
+
+
+
+/* --------- COMMON ROUTES --------- */
+
+//Get the list of subject codes (ACTURSCI, SE, ECE etc)
+app.get('/api/common/subjects', (req, res) => {
+  //No input, no need for input sanitization
+  let subjects = [];
+  for(i = 0; i < timetable.length; i++) {
+    let toAdd = true;
+    for(j = 0; j < subjects.length; j++) {
+      if(timetable[i].subject == subjects[j].subject) toAdd = false;
+    }
+    if(toAdd) subjects.push({
+      "subject": timetable[i].subject
+    });
+  }
+  res.send({
+    "message": "SUCCESS",
+    "content": subjects
   });
 });
 

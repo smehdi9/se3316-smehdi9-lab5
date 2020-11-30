@@ -14,13 +14,15 @@ import { MatListModule } from '@angular/material/list';
 import { HomePageComponent } from './home-page/home-page.component';
 import { LoginPageComponent } from './login-page/login-page.component';
 import { HttpRequestsService } from './http-requests.service';
+import { SearchCourseComponent } from './search-course/search-course.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     MainNavComponent,
     HomePageComponent,
-    LoginPageComponent
+    LoginPageComponent,
+    SearchCourseComponent
   ],
   imports: [
     BrowserModule,
