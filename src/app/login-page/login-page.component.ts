@@ -17,8 +17,43 @@ export class LoginPageComponent implements OnInit {
   constructor() { }
 
   //Get the sign up data, and sign the user up
-  signUpUser() : void  {
+  async signUpUser() : void  {
+    let emailInput = document.getElementById("sign-up-email").value.trim();
+    let usernameInput = document.getElementById("sign-up-username").value.trim();
+    let passwordInput = document.getElementById("sign-up-password").value.trim();
+    let passwordCheckInput = document.getElementById("sign-up-password-check").value.trim();
 
+    //Ensure input is validated
+    if(emailInput == '' || emailInput == undefined || passwordInput == '' || passwordInput == undefined ||
+      usernameInput == '' || usernameInput == undefined || passwordCheckInput == '' || passwordCheckInput == undefined) {
+      document.getElementById("sign-up-errormsg").innerText = "No field can be left empty";
+      return;
+    }
+    else if (!emailInput.match(this.regexEmail)) {
+      document.getElementById("sign-up-errormsg").innerText = "Improper email format";
+      return;
+    }
+    else if (passwordInput.length < 8 || passwordInput.length > 30 || !passwordInput.match(this.regexSpecialChars)) {
+      document.getElementById("sign-up-errormsg").innerText = "Password must be 8-30 characters and must only have . _ or - as non-alphanumeric characters";
+      return;
+    }
+    else if (usernameInput.length < 4 || usernameInput.length > 30 || !usernameInput.match(this.regexSpecialChars)) {
+      document.getElementById("sign-up-errormsg").innerText = "Username must be 4-30 characters and must only have . _ or - as non-alphanumeric characters";
+      return;
+    }
+    else if (passwordInput != passwordCheckInput) {
+      document.getElementById("sign-up-errormsg").innerText = "Passwords do not match!";
+      return;
+    }
+
+    //Get the result from server
+    let result = await this.httpService.serverSignUp(usernameInput, emailInput, passwordInput);
+    if(result.message == "SUCCESS") {
+      document.getElementById("sign-up-errormsg").innerText = "Please check your email to verify your account!";
+    }
+    else if (result.message == "ERR_EMAIL_TAKEN") {
+      document.getElementById("sign-up-errormsg").innerText = "Email is already taken";
+    }
   }
 
   //Get log in data, and log the user in
@@ -29,12 +64,15 @@ export class LoginPageComponent implements OnInit {
     //Ensure input is validated
     if(emailInput == '' || emailInput == undefined || passwordInput == '' || passwordInput == undefined) {
       document.getElementById("log-in-errormsg").innerText = "Email and password fields must not be empty";
+      return;
     }
     else if (!emailInput.match(this.regexEmail)) {
       document.getElementById("log-in-errormsg").innerText = "Improper email format";
+      return;
     }
-    else if (passwordInput.length < 8 || !passwordInput.match(this.regexSpecialChars)) {
-      document.getElementById("log-in-errormsg").innerText = "Password must be 8 characters and must only have . _ - as non-alphanumeric characters ";
+    else if (passwordInput.length < 8 || passwordInput.length > 30 || !passwordInput.match(this.regexSpecialChars)) {
+      document.getElementById("log-in-errormsg").innerText = "Password must be 8-30 characters and must only have . _ or - as non-alphanumeric characters";
+      return;
     }
 
     //Get the result from server
