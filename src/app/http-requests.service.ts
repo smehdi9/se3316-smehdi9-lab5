@@ -76,6 +76,21 @@ export class HttpRequestsService {
   }
 
 
+  /* Using /api/common/:subject
+     Will return a message and array of strings.
+  */
+  async getAllCourseCodes(subject) {
+    try {
+      const response = await fetch(this.serverURL + '/api/common/timetable/' + subject, {
+        method: "GET",
+        headers: this.headersJSON
+      });
+      let result = await response.json();
+      return result;
+    } catch(err) { console.log(err) }
+  }
+
+
   /* Using /api/common/timetable
      Will return a message and array.
   */

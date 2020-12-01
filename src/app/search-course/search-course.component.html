@@ -1,11 +1,13 @@
 <div class="courses-form">
-  <form class="options">
+  <form class="options" onSubmit="return false;">
     <h3>Search Direct</h3>
     <label for="subject-input">Subect</label><br>
-    <select id="subject-input" data-dropup-auto="false"></select>
+    <select id="subject-input" data-dropup-auto="false" (change)="fillCourseDatalist();"></select>
     <br><br>
     <label for="course-input">Course</label><br>
-    <input type="text" id="course-input" placeholder="eg. 3316A...">
+    <input type="text" id="course-input" placeholder="eg. 3316A..." list="coursedatalist">
+    <datalist id="coursedatalist">
+    </datalist>
     <br><br>
     <label for="component-input">Component</label><br>
     <select id="component-input">
@@ -17,6 +19,17 @@
     <br>
     <br>
     <button class="form-button" (click)="fillTimetable();">SEARCH</button>
+  </form>
+</div>
+
+<div class="courses-form">
+  <form class="options" onSubmit="return false;">
+    <h3>Search Keyword</h3>
+    <label for="course-input">Keyword</label><br>
+    <input type="text" id="keyword-input" placeholder="Enter keywords here">
+    <br>
+    <br>
+    <button class="form-button" (click)="fillTimetableByKeyword();">SEARCH</button>
   </form>
 </div>
 

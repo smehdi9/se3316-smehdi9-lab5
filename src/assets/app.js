@@ -189,11 +189,9 @@ app.get('/api/common/subjects', (req, res) => {
   for(i = 0; i < timetable.length; i++) {
     let toAdd = true;
     for(j = 0; j < subjects.length; j++) {
-      if(timetable[i].subject == subjects[j].subject) toAdd = false;
+      if(timetable[i].subject == subjects[j]) toAdd = false;
     }
-    if(toAdd) subjects.push({
-      "subject": timetable[i].subject
-    });
+    if(toAdd) subjects.push(timetable[i].subject);
   }
   res.send({
     "message": "SUCCESS",
@@ -207,7 +205,8 @@ app.get('/api/common/timetable', (req, res) => {
   //Input sanitization JOI
   const schema = joi.object({
     "subject": joi.string().regex(regexSpecialChars).min(1).max(10),
-    "catalog_nbr": joi.string().regex(regexSpecialChars).min(1).max(10)
+    "catalog_nbr": joi.string().regex(regexSpecialChars).min(1).max(10),
+    "component": joi.string().regex(regexSpecialChars).min(3).max(3)
   });
   const resultValidation = schema.validate(req.query);
   if(resultValidation.error) {
@@ -223,6 +222,8 @@ app.get('/api/common/timetable', (req, res) => {
   if(subjectID != undefined) subjectID = subjectID.replace(/\s/g,'').toUpperCase();
   let courseID = req.query.catalog_nbr;
   if(courseID != undefined) courseID = courseID.replace(/\s/g,'').toUpperCase();
+  let componentID = req.query.component;
+  if(componentID != undefined) componentID = componentID.replace(/\s/g,'').toUpperCase();
   for(i = 0; i < timetable.length; i++) {
     //Match if either subject or course ID is provided
     let courseIDCheck = timetable[i].catalog_nbr.toString();
@@ -232,16 +233,19 @@ app.get('/api/common/timetable', (req, res) => {
     if( (subjectID == undefined || subjectID == timetable[i].subject) && (courseID == undefined ||  courseID == courseIDCheck) ) {
       //For each component of the course, send a separate entry into the array. (If a course has LEC and LAB component in course_info, send both separately)
       for(j = 0; j < timetable[i].course_info.length; j++) {
-        subjects.push({
-          "subject": timetable[i].subject,
-          "catalog_nbr": timetable[i].catalog_nbr,
-          "className": timetable[i].className,
-          "class_section": timetable[i].course_info[j].class_section,
-          "ssr_component": timetable[i].course_info[j].ssr_component,
-          "start_time": timetable[i].course_info[j].start_time,
-          "end_time": timetable[i].course_info[j].end_time,
-          "days": timetable[i].course_info[j].days
-        });
+        //If component is not defined, then send all components in, else send in the specific component
+        if(componentID == undefined || componentID == timetable[i].course_info[j].ssr_component) {
+          subjects.push({
+            "subject": timetable[i].subject,
+            "catalog_nbr": timetable[i].catalog_nbr,
+            "className": timetable[i].className,
+            "class_section": timetable[i].course_info[j].class_section,
+            "ssr_component": timetable[i].course_info[j].ssr_component,
+            "start_time": timetable[i].course_info[j].start_time,
+            "end_time": timetable[i].course_info[j].end_time,
+            "days": timetable[i].course_info[j].days
+          });
+        }
       }
     }
   }
@@ -259,6 +263,35 @@ app.get('/api/common/timetable', (req, res) => {
     });
     return;
   }
+});
+
+
+//For a given subject, return all the catalog_nbr's, just the numbers
+app.get('/api/common/timetable/:subject', (req, res) => {
+  const schema = joi.object({
+    "subject": joi.string().regex(regexSpecialChars).min(2).max(8).required()
+  });
+  const resultValidation = schema.validate(req.params);
+  if(resultValidation.error) {
+    res.status(400).send({
+      "message": "ERR_BAD_PARAMS"
+    });
+    return;
+  }
+
+  let catalog_nbrs = [];
+  let subjectID = req.params.subject;
+  for(i = 0; i < timetable.length; i++) {
+    if(subjectID == timetable[i].subject) {
+      catalog_nbrs.push(timetable[i].catalog_nbr);
+    }
+  }
+  //Send all results even if none exist :D
+  res.send({
+    "message": "SUCCESS",
+    "content": catalog_nbrs
+  });
+  return;
 });
 
 
@@ -289,7 +322,7 @@ app.get('/api/common/timetable/:subject/:catalog_nbr', (req, res) => {
   if(subjects.length > 0) {
     res.send({
       "message": "SUCCESS",
-      "content": subjects
+      "content": subjects       //Should only have one entry inside
     });
     return;
   }
