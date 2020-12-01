@@ -1,5 +1,6 @@
 .courses-form {
   display: inline-block;
+  margin-right: 30px;
   margin-left: 40px;
   margin-bottom: 50px;
   background-color: #424242;
@@ -8,20 +9,10 @@
   vertical-align: top;
 }
 
-select {
-  width: 250px;
-  height: 30px;
-  display: inline-block;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  box-sizing: border-box;
-}
-
-input {
-  width: 250px;
-  height: 30px;
-  display: inline-block;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  box-sizing: border-box;
+.errormsg {
+  width: 200px;
+  font-size: 14px;
+  color: red;
+  display: flex;
+  overflow: hidden;
 }

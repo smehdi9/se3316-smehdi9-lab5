@@ -1,14 +1,18 @@
+
 .sidenav-container {
   height: 100%;
+  font-family: "Cascadia Code", plain, sans-serif;
 }
 
 .sidenav {
   width: 160px;
   border: none;
+  font-family: "Cascadia Code", plain, sans-serif;
 }
 
 .sidenav .mat-toolbar {
   background: linear-gradient(to bottom, #80c330, #447700);
+  font-family: "Cascadia Code", plain, sans-serif;
 }
 
 .mat-toolbar.mat-primary {
@@ -16,13 +20,22 @@
   top: 0;
   z-index: 1;
   background: linear-gradient(to bottom, #80c330, #447700);
+  font-family: "Cascadia Code", plain, sans-serif;
 }
 
 span {
   font-size: 25px;
+  font-family: "Cascadia Code", plain, sans-serif;
 }
 
 .content {
   margin-left: 50px;
   margin-top: 30px;
+  font-family: "Cascadia Code", plain, sans-serif;
+}
+
+.content-handheld {
+  margin-left: -25px;
+  margin-top: 30px;
+  font-family: "Cascadia Code", plain, sans-serif;
 }

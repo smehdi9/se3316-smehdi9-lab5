@@ -92,22 +92,43 @@ export class HttpRequestsService {
 
 
   /* Using /api/common/timetable
-     Will return a message and array.
+     Will return a message and optionally array.
   */
-  async getResultsFromQuery(subject: String, catalog_nbr : String) {
+  async getResultsFromQuery(subject: String, catalog_nbr : String, component : String) {
     let subjectQuery = "";
     let courseQuery = "";
+    let componentQuery = "";
 
     //Add queries where needed
     if(subject != undefined && subject != "") {
       subjectQuery = "subject=" + subject + "&";
     }
     if(catalog_nbr != undefined && catalog_nbr != "") {
-      courseQuery = "catalog_nbr=" + catalog_nbr;
+      courseQuery = "catalog_nbr=" + catalog_nbr + "&";
+    }
+    if(component != undefined && component != "NULL") {
+      componentQuery = "component=" + component;
     }
 
     try {
-      const response = await fetch(this.serverURL + '/api/common/timetable?' + subjectQuery + courseQuery, {
+      const response = await fetch(this.serverURL + '/api/common/timetable?' + subjectQuery + courseQuery + componentQuery, {
+        method: "GET",
+        headers: this.headersJSON
+      });
+      let result = await response.json();
+      return result;
+    } catch(err) { console.log(err) }
+  }
+
+
+  /* Using /api/common/timetable
+     Will return a message and optionally array.
+  */
+  async getResultsFromKeyword(keywords: String) {
+    if(keywords.length < 1 || keywords.length > 50) return;
+
+    try {
+      const response = await fetch(this.serverURL + '/api/common/timetable?keywords=' + keywords, {
         method: "GET",
         headers: this.headersJSON
       });

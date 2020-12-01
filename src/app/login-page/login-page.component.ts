@@ -103,8 +103,8 @@ export class LoginPageComponent implements OnInit {
 
   //Simply clear error messages when any of the forms are clicked
   clearErrors() : void {
-    document.getElementById("sign-up-errormsg").innerText = "";
-    document.getElementById("log-in-errormsg").innerText = "";
+    (<HTMLInputElement>document.getElementById("sign-up-errormsg")).innerText = "";
+    (<HTMLInputElement>document.getElementById("log-in-errormsg")).innerText = "";
   }
 
   ngOnInit() : void {

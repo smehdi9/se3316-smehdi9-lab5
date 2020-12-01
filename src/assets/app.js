@@ -182,90 +182,6 @@ app.post('/api/user/test', (req, res) => {
 
 /* --------- COMMON ROUTES --------- */
 
-//Get the list of subject codes (ACTURSCI, SE, ECE etc)
-app.get('/api/common/subjects', (req, res) => {
-  //No input, no need for input sanitization
-  let subjects = [];
-  for(i = 0; i < timetable.length; i++) {
-    let toAdd = true;
-    for(j = 0; j < subjects.length; j++) {
-      if(timetable[i].subject == subjects[j]) toAdd = false;
-    }
-    if(toAdd) subjects.push(timetable[i].subject);
-  }
-  res.send({
-    "message": "SUCCESS",
-    "content": subjects
-  });
-});
-
-
-//USE QUERIES WITH OPTIONAL SUBJECT/COURSE ID/COURSE CODE. Not using parameters. Returns limited timetable data, and nothing else.
-app.get('/api/common/timetable', (req, res) => {
-  //Input sanitization JOI
-  const schema = joi.object({
-    "subject": joi.string().regex(regexSpecialChars).min(1).max(10),
-    "catalog_nbr": joi.string().regex(regexSpecialChars).min(1).max(10),
-    "component": joi.string().regex(regexSpecialChars).min(3).max(3)
-  });
-  const resultValidation = schema.validate(req.query);
-  if(resultValidation.error) {
-    res.status(400).send({
-      "message": "ERR_BAD_QUERY"
-    });
-    return;
-  }
-
-  let subjects = [];
-  //Use queries to get results, remove all white spaces and make all of it upper case (database values are uppercase)
-  let subjectID = req.query.subject;
-  if(subjectID != undefined) subjectID = subjectID.replace(/\s/g,'').toUpperCase();
-  let courseID = req.query.catalog_nbr;
-  if(courseID != undefined) courseID = courseID.replace(/\s/g,'').toUpperCase();
-  let componentID = req.query.component;
-  if(componentID != undefined) componentID = componentID.replace(/\s/g,'').toUpperCase();
-  for(i = 0; i < timetable.length; i++) {
-    //Match if either subject or course ID is provided
-    let courseIDCheck = timetable[i].catalog_nbr.toString();
-    if(!isNaN(courseID)) {
-      courseIDCheck = courseIDCheck.replace(/\D/g,'');
-    }
-    if( (subjectID == undefined || subjectID == timetable[i].subject) && (courseID == undefined ||  courseID == courseIDCheck) ) {
-      //For each component of the course, send a separate entry into the array. (If a course has LEC and LAB component in course_info, send both separately)
-      for(j = 0; j < timetable[i].course_info.length; j++) {
-        //If component is not defined, then send all components in, else send in the specific component
-        if(componentID == undefined || componentID == timetable[i].course_info[j].ssr_component) {
-          subjects.push({
-            "subject": timetable[i].subject,
-            "catalog_nbr": timetable[i].catalog_nbr,
-            "className": timetable[i].className,
-            "class_section": timetable[i].course_info[j].class_section,
-            "ssr_component": timetable[i].course_info[j].ssr_component,
-            "start_time": timetable[i].course_info[j].start_time,
-            "end_time": timetable[i].course_info[j].end_time,
-            "days": timetable[i].course_info[j].days
-          });
-        }
-      }
-    }
-  }
-  //If found, send. Otherwise, send error
-  if(subjects.length > 0) {
-    res.send({
-      "message": "SUCCESS",
-      "content": subjects
-    });
-    return;
-  }
-  else {
-    res.status(404).send({
-      "message": "ERR_RESULT_NOT_FOUND"
-    });
-    return;
-  }
-});
-
-
 //For a given subject, return all the catalog_nbr's, just the numbers
 app.get('/api/common/timetable/:subject', (req, res) => {
   const schema = joi.object({
@@ -336,6 +252,142 @@ app.get('/api/common/timetable/:subject/:catalog_nbr', (req, res) => {
 
 
 
+//Get the list of subject codes (ACTURSCI, SE, ECE etc)
+app.get('/api/common/subjects', (req, res) => {
+  //No input, no need for input sanitization
+  let subjects = [];
+  for(i = 0; i < timetable.length; i++) {
+    let toAdd = true;
+    for(j = 0; j < subjects.length; j++) {
+      if(timetable[i].subject == subjects[j]) toAdd = false;
+    }
+    if(toAdd) subjects.push(timetable[i].subject);
+  }
+  res.send({
+    "message": "SUCCESS",
+    "content": subjects
+  });
+});
+
+//SEARCH QUERY - USE QUERIES WITH OPTIONAL INPUTS. Not using parameters. Returns limited timetable data, and nothing else.
+//Two input formats accepted (either a subject, catalog_nbr, component combo OR a keyword)
+app.get('/api/common/timetable', (req, res) => {
+  //Input sanitization JOI -- ENSURE subject/catalog_nbr/component combo
+  const schemaQuery = joi.object({
+    "subject": joi.string().regex(regexSpecialChars).min(1).max(10),
+    "catalog_nbr": joi.string().regex(regexSpecialChars).min(1).max(10),
+    "component": joi.string().regex(regexSpecialChars).min(3).max(3)
+  });
+  //Input sanitization JOI -- ENSURE keyword
+  const schemaKeyword = joi.object({
+    "keywords": joi.string().regex(regexSpecialChars).min(1).max(50).required()
+  });
+  const resultValidationQuery = schemaQuery.validate(req.query);
+  const resultValidationKeyword = schemaKeyword.validate(req.query);
+
+  //Result for when searched by query
+  if(!resultValidationQuery.error) {
+    let subjects = [];
+    //Use queries to get results, remove all white spaces and make all of it upper case (database values are uppercase)
+    let subjectID = req.query.subject;
+    if(subjectID != undefined) subjectID = subjectID.replace(/\s/g,'').toUpperCase();
+    let courseID = req.query.catalog_nbr;
+    if(courseID != undefined) courseID = courseID.replace(/\s/g,'').toUpperCase();
+    let componentID = req.query.component;
+    if(componentID != undefined) componentID = componentID.replace(/\s/g,'').toUpperCase();
+    for(i = 0; i < timetable.length; i++) {
+      //Match if either subject or course ID is provided
+      let courseIDCheck = timetable[i].catalog_nbr.toString();
+      if(!isNaN(courseID)) {
+        courseIDCheck = courseIDCheck.replace(/\D/g,'');
+      }
+      if( (subjectID == undefined || subjectID == timetable[i].subject) && (courseID == undefined ||  courseID == courseIDCheck) ) {
+        //For each component of the course, send a separate entry into the array. (If a course has LEC and LAB component in course_info, send both separately)
+        for(j = 0; j < timetable[i].course_info.length; j++) {
+          //If component is not defined, then send all components in, else send in the specific component
+          if(componentID == undefined || componentID == timetable[i].course_info[j].ssr_component) {
+            subjects.push({
+              "subject": timetable[i].subject,
+              "catalog_nbr": timetable[i].catalog_nbr,
+              "className": timetable[i].className,
+              "class_section": timetable[i].course_info[j].class_section,
+              "ssr_component": timetable[i].course_info[j].ssr_component,
+              "start_time": timetable[i].course_info[j].start_time,
+              "end_time": timetable[i].course_info[j].end_time,
+              "days": timetable[i].course_info[j].days
+            });
+          }
+        }
+      }
+    }
+    //If found, send. Otherwise, send error
+    if(subjects.length > 0) {
+      res.send({
+        "message": "SUCCESS",
+        "content": subjects
+      });
+      return;
+    }
+    else {
+      res.status(404).send({
+        "message": "ERR_RESULT_NOT_FOUND"
+      });
+      return;
+    }
+  }
+
+  //Result for when searched by keyword
+  else if (!resultValidationKeyword.error) {
+    let subjects = [];
+    let keywords = req.query.keywords.toUpperCase();    //All catalog_nbr and className data is in UPPERCASE
+    const minimumSimilarity = 0.6;    //Minimum similarity needed
+
+    for(i = 0; i < timetable.length; i++) {
+      let courseSim = stringSimilarity.compareTwoStrings(keywords, timetable[i].catalog_nbr.toString());
+      let nameSim = stringSimilarity.compareTwoStrings(keywords, timetable[i].className);
+      //If either name similarity or course similarity passes
+      if(courseSim >= minimumSimilarity || nameSim >= minimumSimilarity) {
+        //For each component of the course, send a separate entry into the array. (If a course has LEC and LAB component in course_info, send both separately)
+        for(j = 0; j < timetable[i].course_info.length; j++) {
+          subjects.push({
+            "subject": timetable[i].subject,
+            "catalog_nbr": timetable[i].catalog_nbr,
+            "className": timetable[i].className,
+            "class_section": timetable[i].course_info[j].class_section,
+            "ssr_component": timetable[i].course_info[j].ssr_component,
+            "start_time": timetable[i].course_info[j].start_time,
+            "end_time": timetable[i].course_info[j].end_time,
+            "days": timetable[i].course_info[j].days
+          });
+        }
+      }
+    }
+    //If found, send. Otherwise, send error
+    if(subjects.length > 0) {
+      res.send({
+        "message": "SUCCESS",
+        "content": subjects
+      });
+      return;
+    }
+    else {
+      res.status(404).send({
+        "message": "ERR_RESULT_NOT_FOUND"
+      });
+      return;
+    }
+  }
+
+  //If neither schema fits, then sent error for bad request
+  else {
+    res.status(400).send({
+      "message": "ERR_BAD_QUERY"
+    });
+    return;
+  }
+});
+
+
 
 //HELPER FUNCTIONS --------------------------------------------
 
@@ -347,6 +399,39 @@ app.get('/api/common/timetable/:subject/:catalog_nbr', (req, res) => {
 const PORT = 3000;
 app.listen(PORT);
 console.log("Listening on port " + PORT)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

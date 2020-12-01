@@ -24,9 +24,16 @@
       <span>Western Timetable</span>
     </mat-toolbar>
 
-    <div class="content">
+    <div class="content-handheld" *ngIf="isHandset$ | async; else notHandset">
       <router-outlet></router-outlet>
     </div>
+
+    <ng-template #notHandset>
+      <div class="content">
+        <router-outlet></router-outlet>
+      </div>
+    </ng-template>
+
 
   </mat-sidenav-content>
 </mat-sidenav-container>

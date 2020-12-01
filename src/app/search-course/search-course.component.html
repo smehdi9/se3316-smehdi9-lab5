@@ -1,6 +1,8 @@
 <div class="courses-form">
-  <form class="options" onSubmit="return false;">
+  <form class="options" onSubmit="return false;" (mousedown)="clearErrors();">
     <h3>Search Direct</h3>
+    <label id="query-errormsg" class="errormsg"></label>
+    <br>
     <label for="subject-input">Subect</label><br>
     <select id="subject-input" data-dropup-auto="false" (change)="fillCourseDatalist();"></select>
     <br><br>
@@ -23,9 +25,10 @@
 </div>
 
 <div class="courses-form">
-  <form class="options" onSubmit="return false;">
+  <form class="options" onSubmit="return false;" (mousedown)="clearErrors();">
     <h3>Search Keyword</h3>
-    <label for="course-input">Keyword</label><br>
+    <label id="keyword-errormsg" class="errormsg"></label>
+    <br>
     <input type="text" id="keyword-input" placeholder="Enter keywords here">
     <br>
     <br>
