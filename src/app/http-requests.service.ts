@@ -19,7 +19,7 @@ export class HttpRequestsService {
   };
 
 
-  // ----- Account management HTTP requests -----
+  // ----- Account management HTTP requests -----------------------------------------------------------------
 
   /* Using /api/user/login
      Will return a message and optionally a token value.
@@ -36,13 +36,13 @@ export class HttpRequestsService {
       });
       let result = await response.json();
       return result;
-    } catch(err) { console.log(err) }
+    } catch(err) { console.log(err); return undefined; }
   }
 
   /* Using /api/user/signup
      Will return a message.
   */
-  async serverSignUp(username: String, email : String, password : String) {
+  async serverSignUp(username : String, email : String, password : String) {
     try {
       const response = await fetch(this.serverURL + '/api/user/signup', {
         method: "POST",
@@ -55,11 +55,30 @@ export class HttpRequestsService {
       });
       let result = await response.json();
       return result;
-    } catch(err) { console.log(err) }
+    } catch(err) { console.log(err); return undefined; }
+
+  }
+
+  /* Using /api/user/check
+     Will return a message, with a potential admin flag.
+  */
+  async checkUserVerification(wtToken : String) {
+    try {
+      const response = await fetch(this.serverURL + '/api/user/check', {
+        method: "PUT",
+        headers: this.headersJSON,
+        body: JSON.stringify({
+          "token": wtToken,
+        })
+      });
+      let result = await response.json();
+      return result;
+    } catch(err) { console.log(err); return undefined; }
   }
 
 
-  // ----- Common HTTP requests -----
+
+  // ----- Common HTTP requests -----------------------------------------------------------------
 
   /* Using /api/common/subjects
      Will return a message and array.
@@ -72,7 +91,7 @@ export class HttpRequestsService {
       });
       let result = await response.json();
       return result;
-    } catch(err) { console.log(err) }
+    } catch(err) { console.log(err); return undefined; }
   }
 
 
@@ -87,14 +106,14 @@ export class HttpRequestsService {
       });
       let result = await response.json();
       return result;
-    } catch(err) { console.log(err) }
+    } catch(err) { console.log(err); return undefined; }
   }
 
 
   /* Using /api/common/timetable
      Will return a message and optionally array.
   */
-  async getResultsFromQuery(subject: String, catalog_nbr : String, component : String) {
+  async getResultsFromQuery(subject : String, catalog_nbr : String, component : String) {
     let subjectQuery = "";
     let courseQuery = "";
     let componentQuery = "";
@@ -117,14 +136,14 @@ export class HttpRequestsService {
       });
       let result = await response.json();
       return result;
-    } catch(err) { console.log(err) }
+    } catch(err) { console.log(err); return undefined; }
   }
 
 
   /* Using /api/common/timetable
      Will return a message and optionally array.
   */
-  async getResultsFromKeyword(keywords: String) {
+  async getResultsFromKeyword(keywords : String) {
     if(keywords.length < 1 || keywords.length > 50) return;
 
     try {
@@ -134,7 +153,7 @@ export class HttpRequestsService {
       });
       let result = await response.json();
       return result;
-    } catch(err) { console.log(err) }
+    } catch(err) { console.log(err); return undefined; }
   }
 
   constructor() { }

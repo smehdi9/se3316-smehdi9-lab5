@@ -1,10 +1,14 @@
-<p class="title">Welcome to <b>{{title}}</b></p>
-<p>
-  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas nec arcu mi. In aliquet convallis dolor ac pulvinar. Suspendisse imperdiet gravida ante, sit amet commodo mi elementum quis. Nam sed mauris non lorem pulvinar euismod a consectetur diam. Morbi ut pulvinar sem, sed sodales eros. Interdum et malesuada fames ac ante ipsum primis in faucibus. Aliquam gravida commodo odio, nec mollis urna volutpat ac. Maecenas dapibus ornare nulla, vitae finibus odio rutrum nec. Fusce blandit purus vitae ante pellentesque auctor. Sed venenatis tempus odio a tempor.
-</p>
-<p>
-  Etiam vitae semper sem. Curabitur sapien justo, luctus a molestie eu, molestie et purus.
-</p>
-<p>
-  Praesent a varius lacus. Aliquam at interdum tortor, vitae dapibus diam. Sed pharetra turpis eu sem gravida, ac faucibus nibh pretium. Cras nulla erat, consequat eu aliquet a, eleifend in risus.
-</p>
+<div class="home-content">
+  <p class="title">Welcome to <b>{{title}}</b></p>
+  <p>
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas nec arcu mi. In aliquet convallis dolor ac pulvinar. Suspendisse imperdiet gravida ante, sit amet commodo mi elementum quis. Nam sed mauris non lorem pulvinar euismod a consectetur diam. Morbi ut pulvinar sem, sed sodales eros. Interdum et malesuada fames ac ante ipsum primis in faucibus. Aliquam gravida commodo odio, nec mollis urna volutpat ac. Maecenas dapibus ornare nulla, vitae finibus odio rutrum nec. Fusce blandit purus vitae ante pellentesque auctor. Sed venenatis tempus odio a tempor.
+  </p>
+  <p>
+    Etiam vitae semper sem. Curabitur sapien justo, luctus a molestie eu, molestie et purus.
+  </p>
+  <p>
+    Praesent a varius lacus. Aliquam at interdum tortor, vitae dapibus diam. Sed pharetra turpis eu sem gravida, ac faucibus nibh pretium. Cras nulla erat, consequat eu aliquet a, eleifend in risus.
+  </p>
+  <br><br>
+  <button class="form-button" (click)="redirectLogin();" *ngIf="isSignedOut">LOG IN</button>
+</div>

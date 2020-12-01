@@ -15,6 +15,8 @@ import { HomePageComponent } from './home-page/home-page.component';
 import { LoginPageComponent } from './login-page/login-page.component';
 import { HttpRequestsService } from './http-requests.service';
 import { SearchCourseComponent } from './search-course/search-course.component';
+import { UserPanelComponent } from './user-panel/user-panel.component';
+import { EditSchedulesComponent } from './edit-schedules/edit-schedules.component';
 
 @NgModule({
   declarations: [
@@ -22,7 +24,9 @@ import { SearchCourseComponent } from './search-course/search-course.component';
     MainNavComponent,
     HomePageComponent,
     LoginPageComponent,
-    SearchCourseComponent
+    SearchCourseComponent,
+    UserPanelComponent,
+    EditSchedulesComponent
   ],
   imports: [
     BrowserModule,

@@ -2,6 +2,11 @@ b {
   color: #80c330;
 }
 
+.home-content {
+  margin-left: 30px;
+  width: 90%;
+}
+
 .title {
   font-size: 20px;
 }

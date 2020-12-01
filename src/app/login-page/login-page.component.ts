@@ -83,8 +83,7 @@ export class LoginPageComponent implements OnInit {
     if(result.message == "SUCCESS") {
       //Save JWT in local storage
       localStorage.wtToken = result.token;
-      //Perform log-in logic
-      console.log(result.token);
+      window.location.replace('/user');   //Redirect to user
     }
     //Errors if log-in information is incorrect
     else if (result.message == "ERR_RESULT_NOT_FOUND") {
@@ -107,7 +106,17 @@ export class LoginPageComponent implements OnInit {
     (<HTMLInputElement>document.getElementById("log-in-errormsg")).innerText = "";
   }
 
-  ngOnInit() : void {
+  async ngOnInit() {
+    //If the user is already logged in, then redirect to user panel
+    if(localStorage.wtToken != "" || localStorage.wtToken != undefined) {
+      let result = await this.httpService.checkUserVerification(localStorage.wtToken);
+      if(result.message == "ACCEPTED") {
+        window.location.replace('/user');   //Redirect to user
+      }
+      else {
+        localStorage.wtToken = "";
+      }
+    }
   }
 
 }

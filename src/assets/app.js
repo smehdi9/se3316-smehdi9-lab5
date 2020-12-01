@@ -4,7 +4,9 @@ const lowdb = require("lowdb");
 const cors = require("cors");
 const FileSync = require("lowdb/adapters/FileSync");
 const jwt = require("jsonwebtoken");
-const stringSimilarity = require("string-similarity")
+const stringSimilarity = require("string-similarity");
+//Password dependency
+const bcrypt = require("bcryptjs");
 
 const app = express();
 const timetable = require("./Lab3-timetable-data.json");      //All timetable data
@@ -68,7 +70,7 @@ app.put('/api/user/login', (req, res) => {
         return;
       }
       //Log-in check user password
-      if(login_password == user_list[i].password) {
+      if(bcrypt.compareSync(login_password, user_list[i].password)) {
         //Sign JWT
         let token = jwt.sign({"email": user_list[i].email, "admin": user_list[i].admin}, secure_info.jwt_secure_key);
         if(token != undefined) {
@@ -131,13 +133,20 @@ app.post('/api/user/signup', (req, res) => {
   }
   //If the email doesn't exist, add it to DB
   let login_password = req.body.password;
+
+  //Salt password
+  var salt = bcrypt.genSaltSync(10);
+  var hash = bcrypt.hashSync(login_password, salt);
+
   let new_user = {
     "email": login_email,
-    "password": login_password,
+    "password": hash,
+    "user_salt": salt,
     "username": login_username,
     "admin": false,
     "verified": true,
-    "disabled": false
+    "disabled": false,
+    "created": Date.now()
   };
   usersDB.get("user_list").push(new_user).write();
 
@@ -148,8 +157,8 @@ app.post('/api/user/signup', (req, res) => {
 });
 
 
-//Test  ------------------------------------------- TEMPORARY TEMPORARY TEMPORARY TEMPORARY
-app.post('/api/user/test', (req, res) => {
+//Check if the sent token is valid
+app.put('/api/user/check', (req, res) => {
   //Input sanitization JOI
   const schema = joi.object({
     "token": joi.string().regex(regexJWT).required()
@@ -172,9 +181,30 @@ app.post('/api/user/test', (req, res) => {
     return;
   }
 
-  res.send({
-    "message": "SUCCESS",
-    "data": decoded
+  //Check if user exists
+  let user_list = usersDB.get("user_list").value();
+  for(i = 0; i < user_list.length; i++) {
+    if(user_list[i].email == decoded.email) {
+      if(user_list[i].verified && !user_list[i].disabled) {
+        res.send({
+          "message": "ACCEPTED",
+          "username": user_list[i].username,
+          "email": user_list[i].email,
+          "admin": user_list[i].admin,
+          "created": user_list[i].created
+        });
+        return;
+      }
+      else {
+        res.send({
+          "message": "DENIED"
+        });
+        return;
+      }
+    }
+  }
+  res.status(403).send({
+    "message": "DENIED"
   });
 });
 

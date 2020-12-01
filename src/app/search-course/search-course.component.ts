@@ -95,7 +95,6 @@ export class SearchCourseComponent implements OnInit {
 
   //On init: Fill the subject codes drop down
   async ngOnInit() {
-    //window.location.replace('/home');
     let results = await this.httpService.getAllSubjectCodes(); //HTTP request
     let subjectList = results.content;
     let inputSelect = <HTMLInputElement>document.getElementById("subject-input");
