@@ -131,7 +131,6 @@ export class SearchCourseComponent implements OnInit {
   clearErrors() : void {
     (<HTMLInputElement>document.getElementById("query-errormsg")).innerText = "";
     (<HTMLInputElement>document.getElementById("keyword-errormsg")).innerText = "";
-    //selfReference.deleteToDeletes();
   }
 
   //Add time table LI to UL

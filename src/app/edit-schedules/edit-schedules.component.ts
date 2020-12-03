@@ -18,16 +18,14 @@ export class EditSchedulesComponent implements OnInit {
   async fillTimetable() {
     let subjectValue = (<HTMLInputElement>document.getElementById("subject-input")).value;
     let courseValue = (<HTMLInputElement>document.getElementById("course-input")).value;
-    let componentValue = (<HTMLInputElement>document.getElementById("component-input")).value;
 
     //If no values are entered, don't search (TOO many results :/ ) or if incorrect input is entered
     if((subjectValue == undefined || subjectValue == "") &&
-       (courseValue == undefined || courseValue == "") &&
-       (componentValue == undefined || componentValue == "NULL")) {
+       (courseValue == undefined || courseValue == "")) {
        return;
     }
     //Get array of results
-    let results = await this.httpService.getResultsFromQuery(subjectValue, courseValue, componentValue);
+    let results = await this.httpService.getResultsFromQuery(subjectValue, courseValue, undefined);
     //Add to DOM
     if(results.message == "SUCCESS") {
       //Fill the UL with the results
@@ -40,7 +38,7 @@ export class EditSchedulesComponent implements OnInit {
     }
     else {
       this.emptyElement(<HTMLInputElement>document.getElementById("resultlist"));
-      (<HTMLInputElement>document.getElementById("query-errormsg")).innerText = "Course not found";
+      (<HTMLInputElement>document.getElementById("schedule-errormsg")).innerText = "Course not found";
     }
   }
 
@@ -75,16 +73,19 @@ export class EditSchedulesComponent implements OnInit {
       localStorage.wtToken = "";
       window.location.replace('/login');   //Redirect to login
     }
-    let results = await this.httpService.getAllSubjectCodes(); //HTTP request
-    let subjectList = results.content;
-    let inputSelect = <HTMLInputElement>document.getElementById("subject-input");
-    for(let i = 0; i < subjectList.length; i++) {
-      let newOpt = document.createElement("option");
-      let newOptText = document.createTextNode(subjectList[i]);
-      newOpt.appendChild(newOptText);
-      inputSelect.appendChild(newOpt);
+    //Otherwise, fill the appropriate data (fill subject drop down and user's schedules drop down)
+    else {
+      let results = await this.httpService.getAllSubjectCodes(); //HTTP request
+      let subjectList = results.content;
+      let inputSelect = <HTMLInputElement>document.getElementById("subject-input");
+      for(let i = 0; i < subjectList.length; i++) {
+        let newOpt = document.createElement("option");
+        let newOptText = document.createTextNode(subjectList[i]);
+        newOpt.appendChild(newOptText);
+        inputSelect.appendChild(newOpt);
+      }
+      this.fillCourselist();
     }
-    this.fillCourselist();
   }
 
 
@@ -98,7 +99,7 @@ export class EditSchedulesComponent implements OnInit {
 
   //Simply clear error messages when any of the forms are clicked
   clearErrors() : void {
-    (<HTMLInputElement>document.getElementById("search-errormsg")).innerText = "";
+    (<HTMLInputElement>document.getElementById("schedule-errormsg")).innerText = "";
   }
 
   //Add time table LI to UL

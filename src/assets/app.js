@@ -43,6 +43,11 @@ usersDB.defaults({"user_list": []}).write();
 //The various regex used in this api
 const regexSpecialChars = /^[^<>:/?#@.!$&'()*+,;=]*$/;
 const regexEmail = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+
+/*
+In our case the token will include
+email, admin, iat
+*/
 const regexJWT = /^[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+$/;
 
 //To parse the body of the JSON requests
@@ -120,18 +125,18 @@ app.put('/api/user/login', (req, res) => {
 //Sign a new user into the database
 app.post('/api/user/signup', (req, res) => {
   //Input sanitization JOI
-  // const schema = joi.object({
-  //   "email": joi.string().regex(regexEmail).required(),
-  //   "password": joi.string().regex(regexSpecialChars).min(8).max(30).required(),
-  //   "username": joi.string().regex(regexSpecialChars).min(4).max(30).required()
-  // });
-  // const resultValidation = schema.validate(req.body);
-  // if(resultValidation.error) {
-  //   res.status(400).send({
-  //     "message": "ERR_BAD_BODY"
-  //   });
-  //   return;
-  // }
+  const schema = joi.object({
+    "email": joi.string().regex(regexEmail).required(),
+    "password": joi.string().regex(regexSpecialChars).min(8).max(30).required(),
+    "username": joi.string().regex(regexSpecialChars).min(4).max(30).required()
+  });
+  const resultValidation = schema.validate(req.body);
+  if(resultValidation.error) {
+    res.status(400).send({
+      "message": "ERR_BAD_BODY"
+    });
+    return;
+  }
 
   //Check if EMAIL (only email) exists
   let user_list = usersDB.get("user_list").value();
@@ -194,9 +199,9 @@ app.put('/api/user/check', (req, res) => {
 
   //Verify token
   let decoded = undefined;   //This will be the token data
-  let test_token = req.body.token;
+  let token = req.body.token;
   try {
-    decoded = jwt.verify(test_token, secure_info.jwt_secure_key);
+    decoded = jwt.verify(token, secure_info.jwt_secure_key);
   } catch(err) {
     res.status(403).send({
       "message": "ERR_DENIED"
@@ -471,9 +476,9 @@ app.post("/api/secure/schedules", (req, res) => {
 
   //Verify token
   let decoded = undefined;   //This will be the token data
-  let test_token = req.body.token;
+  let token = req.body.token;
   try {
-    decoded = jwt.verify(test_token, secure_info.jwt_secure_key);
+    decoded = jwt.verify(token, secure_info.jwt_secure_key);
   } catch(err) {
     res.status(403).send({
       "message": "ERR_DENIED"
@@ -572,9 +577,9 @@ app.put("/api/secure/schedules", (req, res) => {
 
   //Verify token
   let decoded = undefined;   //This will be the token data
-  let test_token = req.body.token;
+  let token = req.body.token;
   try {
-    decoded = jwt.verify(test_token, secure_info.jwt_secure_key);
+    decoded = jwt.verify(token, secure_info.jwt_secure_key);
   } catch(err) {
     res.status(403).send({
       "message": "ERR_DENIED"
@@ -631,6 +636,35 @@ app.put("/api/secure/schedules", (req, res) => {
   res.status(403).send({
     "message": "ERR_DENIED"
   });
+});
+
+
+//To get the schedules for the given user
+app.get('/api/secure/schedules', (req, res) => {
+  const schema = joi.object({
+    "authorization": joi.string().regex(regexJWT).required()
+  });
+  const resultValidation = schema.validate(req.headers);
+  if(resultValidation.error) {
+    res.status(400).send({
+      "message": "ERR_BAD_HEADER"
+    });
+    return;
+  }
+
+  //Verify token
+  let decoded = undefined;   //This will be the token data
+  let token = req.authorization;
+  try {
+    decoded = jwt.verify(token, secure_info.jwt_secure_key);
+  } catch(err) {
+    res.status(403).send({
+      "message": "ERR_DENIED"
+    });
+    return;
+  }
+
+
 });
 
 
