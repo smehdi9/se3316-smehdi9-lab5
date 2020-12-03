@@ -20,7 +20,7 @@
     <br>
     <input type="text" id="description-input" placeholder="Describe your schedule (Optional)">
     <br><br>
-    <label for="new-name-input">Public </label>
+    <label for="public-input">Public </label>
     <input type="checkbox" id="public-input" class="checkbox">
     <br><br>
     <button *ngIf="selectedSchedule; else addNew" class="form-button" (click)="updateSchedule();">UPDATE</button>

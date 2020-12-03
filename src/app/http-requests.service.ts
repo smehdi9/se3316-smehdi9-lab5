@@ -217,6 +217,71 @@ export class HttpRequestsService {
   }
 
 
+  /* Using POST /api/secure/schedules
+     Will only return a message
+  */
+  async createNewSchedule(name : String, description : String, course_list) {
+    //Disallow empty names
+    if(name == "" || name == undefined) {
+      return;
+    }
+    //Allow empty description
+    else if (description == "" || description == undefined){
+      try {
+        const response = await fetch(this.serverURL + '/api/secure/schedules/' + name, {
+          method: "POST",
+          headers: this.headersJSON,
+          body: JSON.stringify({
+            "token": localStorage.wtToken,
+            "name": name,
+            "course_list": course_list
+          })
+        });
+        let result = await response.json();
+        return result;
+      } catch(err) { console.log(err); return undefined; }
+    }
+    //If description is given, send that too
+    else {
+      try {
+        const response = await fetch(this.serverURL + '/api/secure/schedules/' + name, {
+          method: "POST",
+          headers: this.headersJSON,
+          body: JSON.stringify({
+            "token": localStorage.wtToken,
+            "name": name,
+            "description": description,
+            "course_list": course_list
+          })
+        });
+        let result = await response.json();
+        return result;
+      } catch(err) { console.log(err); return undefined; }
+    }
+  }
+
+
+  /* Using DELETE /api/secure/schedules/:name
+     Will return a message and optionally an object.
+  */
+  async deleteScheduleByName(name : String) {
+    //Dont allow improper inputs
+    if(name == undefined || name == "") return undefined;
+    try {
+      const response = await fetch(this.serverURL + '/api/secure/schedules/' + name, {
+        method: "DELETE",
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'authorization': localStorage.wtToken
+        }
+      });
+      let result = await response.json();
+      return result;
+    } catch(err) { console.log(err); return undefined; }
+  }
+
+
 
   constructor() { }
 }

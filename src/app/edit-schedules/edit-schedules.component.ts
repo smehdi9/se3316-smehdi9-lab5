@@ -68,7 +68,7 @@ export class EditSchedulesComponent implements OnInit {
 
 
   //When a subject and course code is selected
-  addNewSchedule() {
+  addCourseToTempList() {
     let subjectValue = (<HTMLInputElement>document.getElementById("subject-input")).value;
     let courseValue = (<HTMLInputElement>document.getElementById("course-input")).value;
 
@@ -89,6 +89,7 @@ export class EditSchedulesComponent implements OnInit {
     });
     this.updateTempList();
   }
+
 
   //Fill the optional drop down for the text input field for the selected subject -- Decorative
   async fillCourselist() {
@@ -127,6 +128,32 @@ export class EditSchedulesComponent implements OnInit {
     }
     else {
       (<HTMLInputElement>document.getElementById("selected-course")).innerText = ""
+    }
+  }
+
+
+  //Add a new schedule
+  async addNewSchedule() {
+    let newNameInput = (<HTMLInputElement>document.getElementById("schedule-dropdown")).value;
+  }
+
+
+  //Delete a schedule
+  async deleteSchedule() {
+    let scheduleDropDownInput = (<HTMLInputElement>document.getElementById("schedule-dropdown")).value;
+    if(scheduleDropDownInput == "<") {      //This should not happen anyway
+      return;
+    }
+    else {
+      //Ask for final confirmation
+      if(confirm("Are you sure? Ok to confirm")) {
+        let result = (await this.httpService.deleteScheduleByName(scheduleDropDownInput)).message;
+        if(result == "SUCCESS") {
+          alert(scheduleDropDownInput + " successfully deleted");
+        } else {
+          (<HTMLInputElement>document.getElementById("schedule-errormsg")).innerText = "Something went wrong";
+        }
+      }
     }
   }
 
