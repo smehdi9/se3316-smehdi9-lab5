@@ -30,7 +30,7 @@ export class UserPanelComponent implements OnInit {
     //Check if the user is allowed to access this page
     //If the locally stored token is invalid/empty/unaccepted then redirect to the login page
     let result = await this.httpService.checkUserVerification(localStorage.wtToken);
-    if(result.message != "ACCEPTED") {
+    if(result.message != "SUCCESS") {
       localStorage.wtToken = "";
       window.location.replace('/login');   //Redirect to login
     }

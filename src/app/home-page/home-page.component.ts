@@ -26,7 +26,7 @@ export class HomePageComponent implements OnInit {
     //If the user is already logged in,
     if(localStorage.wtToken != "" || localStorage.wtToken != undefined) {
       let result = await this.httpService.checkUserVerification(localStorage.wtToken);
-      if(result.message == "ACCEPTED") {
+      if(result.message == "SUCCESS") {
         this.isSignedOut = false;
       }
       else {

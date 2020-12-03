@@ -110,7 +110,7 @@ export class LoginPageComponent implements OnInit {
     //If the user is already logged in, then redirect to user panel
     if(localStorage.wtToken != "" || localStorage.wtToken != undefined) {
       let result = await this.httpService.checkUserVerification(localStorage.wtToken);
-      if(result.message == "ACCEPTED") {
+      if(result.message == "SUCCESS") {
         window.location.replace('/user');   //Redirect to user
       }
       else {

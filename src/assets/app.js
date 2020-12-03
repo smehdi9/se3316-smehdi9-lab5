@@ -12,11 +12,31 @@ const app = express();
 const timetable = require("./Lab3-timetable-data.json");      //All timetable data
 const secure_info = require("./secure_info.json");
 
-//The schedules db/json file -----
-const schedulesDB = lowdb(new FileSync("schedule_database.json"));
-schedulesDB.defaults({"schedule_list": []}).write();
-
 //The users db/json file -----
+/*
+User JSON file will keep the list of their information as well as schedule_lists
+user format:
+{
+ "email":,            //Primary key
+ "password":,         //Salted hashed password
+ "user_salt":,        //Salt for the password
+ "username":,         //Alternate key
+ "admin":,            //Admin flag
+ "verified":,         //Verification flag
+ "disabled":,         //Disabled flag
+ "created":,          //Date created
+ "schedule_list": []  //Array that stores all the schedules
+}
+
+schedule format:
+{
+ "name":,                 //Name of schedule
+ "course_list": [],       //"catalog_nbr" and "subject"
+ "public":,               //Hidden/public flag
+ "description":           //Description
+ "edited":                //Last time the schedule was edited
+}
+*/
 const usersDB = lowdb(new FileSync("user_database.json"));
 usersDB.defaults({"user_list": []}).write();
 
@@ -115,16 +135,16 @@ app.post('/api/user/signup', (req, res) => {
 
   //Check if EMAIL (only email) exists
   let user_list = usersDB.get("user_list").value();
-  let login_email = req.body.email;
-  let login_username = req.body.username;
+  let signup_email = req.body.email;
+  let signup_username = req.body.username;
   for(i = 0; i < user_list.length; i++) {
-    if(user_list[i].email == login_email) {
+    if(user_list[i].email == signup_email) {
       res.status(403).send({
         "message": "ERR_EMAIL_TAKEN"
       });
       return;
     }
-    if(user_list[i].username == login_username) {
+    if(user_list[i].username == signup_username) {
       res.status(403).send({
         "message": "ERR_USER_TAKEN"
       });
@@ -132,21 +152,22 @@ app.post('/api/user/signup', (req, res) => {
     }
   }
   //If the email doesn't exist, add it to DB
-  let login_password = req.body.password;
+  let signup_password = req.body.password;
 
   //Salt password
   var salt = bcrypt.genSaltSync(10);
-  var hash = bcrypt.hashSync(login_password, salt);
+  var hash = bcrypt.hashSync(signup_password, salt);
 
   let new_user = {
-    "email": login_email,
+    "email": signup_email,
     "password": hash,
     "user_salt": salt,
-    "username": login_username,
+    "username": signup_username,
     "admin": false,
     "verified": true,
     "disabled": false,
-    "created": Date.now()
+    "created": Date.now(),
+    "schedule_list": []       //This list will store all the schedules for the given user
   };
   usersDB.get("user_list").push(new_user).write();
 
@@ -177,7 +198,9 @@ app.put('/api/user/check', (req, res) => {
   try {
     decoded = jwt.verify(test_token, secure_info.jwt_secure_key);
   } catch(err) {
-    res.status(500).send("ERR_SOMETHING_WENT_WRONG");
+    res.status(403).send({
+      "message": "ERR_DENIED"
+    });
     return;
   }
 
@@ -187,7 +210,7 @@ app.put('/api/user/check', (req, res) => {
     if(user_list[i].email == decoded.email) {
       if(user_list[i].verified && !user_list[i].disabled) {
         res.send({
-          "message": "ACCEPTED",
+          "message": "SUCCESS",
           "username": user_list[i].username,
           "email": user_list[i].email,
           "admin": user_list[i].admin,
@@ -196,15 +219,16 @@ app.put('/api/user/check', (req, res) => {
         return;
       }
       else {
-        res.send({
-          "message": "DENIED"
+        res.status(403).send({
+          "message": "ERR_DENIED"
         });
         return;
       }
     }
   }
+  //If user not found, send denial
   res.status(403).send({
-    "message": "DENIED"
+    "message": "ERR_DENIED"
   });
 });
 
@@ -419,8 +443,226 @@ app.get('/api/common/timetable', (req, res) => {
 
 
 
-//HELPER FUNCTIONS --------------------------------------------
+/* --------- SECURE ROUTES --------- */
 
+//To create a new schedule
+app.post("/api/secure/schedules", (req, res) => {
+  //Input sanitization -- Make sure all required parameters are present
+  const schema = joi.object({
+    "name": joi.string().regex(regexSpecialChars).min(2).max(20).required(),
+    "description": joi.string().regex(regexSpecialChars).max(50),
+    "course_list": joi.array().required(),
+    "token": joi.string().regex(regexJWT).required()
+  });
+  const resultValidation = schema.validate(req.body);
+  if(resultValidation.error) {
+    res.status(400).send({
+      "message": "ERR_BAD_BODY"
+    });
+    return;
+  }
+  //Check if sent course list is valid
+  if(!isValidCourseList(req.body.course_list)) {
+    res.status(400).send({
+      "message": "ERR_BAD_BODY"
+    });
+    return;
+  }
+
+  //Verify token
+  let decoded = undefined;   //This will be the token data
+  let test_token = req.body.token;
+  try {
+    decoded = jwt.verify(test_token, secure_info.jwt_secure_key);
+  } catch(err) {
+    res.status(403).send({
+      "message": "ERR_DENIED"
+    });
+    return;
+  }
+
+  //Check if user exists
+  let user_list = usersDB.get("user_list").value();
+  for(i = 0; i < user_list.length; i++) {
+    if(user_list[i].email == decoded.email) {
+      //Only if the user is verified and not disabled (should likely not happen anyway)
+      if(user_list[i].verified && !user_list[i].disabled) {
+        //schedulesDB.set("schedule_list", schedule_list).write();
+        for(j = 0; j < user_list[i].schedule_list.length; j++){
+          if(user_list[i].schedule_list[j].name == req.body.name) {
+            res.status(403).send({
+              "message": "ERR_SCHEDULE_EXISTS"
+            });
+            return;
+          }
+        }
+        //Ensure the user has less than 20 schedules
+        if(user_list[i].schedule_list.length >= 20) {
+          res.status(403).send({
+            "message": "ERR_MAX_REACHED"
+          });
+          return;
+        }
+        //If the given schedule name doesn't exist, add it to the list for this user
+        let new_sched = {};
+        if(req.body.description != undefined) {
+          new_sched = {
+            "name": req.body.name,
+            "description": req.body.description,
+            "public": false,
+            "course_list": req.body.course_list,
+            "edited": Date.now()
+          };
+        }
+        else {
+          new_sched = {
+            "name": req.body.name,
+            "description": "",
+            "public": false,
+            "course_list": req.body.course_list,
+            "edited": Date.now()
+          };
+        }
+        user_list[i].schedule_list.push(new_sched);
+        usersDB.set("user_list", user_list).write();
+        res.send({
+          "message": "SUCCESS"
+        });
+        return;
+      }
+      else {
+        res.status(403).send({
+          "message": "ERR_DENIED"
+        });
+        return;
+      }
+    }
+  }
+  //If user not found, send denial
+  res.status(403).send({
+    "message": "ERR_DENIED"
+  });
+});
+
+
+app.put("/api/secure/schedules", (req, res) => {
+  //Input sanitization -- Make sure all required parameters are present
+  const schema = joi.object({
+    "name": joi.string().regex(regexSpecialChars).min(2).max(20).required(),
+    "description": joi.string().regex(regexSpecialChars).max(50),
+    "course_list": joi.array().required(),
+    "token": joi.string().regex(regexJWT).required()
+  });
+  const resultValidation = schema.validate(req.body);
+  if(resultValidation.error) {
+    res.status(400).send({
+      "message": "ERR_BAD_BODY"
+    });
+    return;
+  }
+  //Check if sent course list is valid
+  if(!isValidCourseList(req.body.course_list)) {
+    res.status(400).send({
+      "message": "ERR_BAD_BODY"
+    });
+    return;
+  }
+
+  //Verify token
+  let decoded = undefined;   //This will be the token data
+  let test_token = req.body.token;
+  try {
+    decoded = jwt.verify(test_token, secure_info.jwt_secure_key);
+  } catch(err) {
+    res.status(403).send({
+      "message": "ERR_DENIED"
+    });
+    return;
+  }
+
+  //Check if user exists
+  let user_list = usersDB.get("user_list").value();
+  for(i = 0; i < user_list.length; i++) {
+    if(user_list[i].email == decoded.email) {
+      //Only if the user is verified and not disabled (should likely not happen anyway)
+      if(user_list[i].verified && !user_list[i].disabled) {
+        //schedulesDB.set("schedule_list", schedule_list).write();
+        for(j = 0; j < user_list[i].schedule_list.length; j++){
+          if(user_list[i].schedule_list[j].name == req.body.name) {
+            res.status(403).send({
+              "message": "ERR_SCHEDULE_EXISTS"
+            });
+            return;
+          }
+        }
+        //If the given schedule name doesn't exist, add it to the list for this user
+        let new_sched = {};
+        if(req.body.description != undefined) {
+          new_sched = {
+            "name": req.body.name,
+            "description": req.body.description,
+            "public": false,
+            "course_list": req.body.course_list,
+            "edited": Date.now()
+          };
+        }
+        else {
+          new_sched = {
+            "name": req.body.name,
+            "description": "",
+            "public": false,
+            "course_list": req.body.course_list,
+            "edited": Date.now()
+          };
+        }
+        user_list[i].schedule_list.push(new_sched);
+        usersDB.set("user_list", user_list).write();
+        res.send({
+          "message": "SUCCESS"
+        });
+        return;
+      }
+      else {
+        res.status(403).send({
+          "message": "ERR_DENIED"
+        });
+        return;
+      }
+    }
+  }
+  //If user not found, send denial
+  res.status(403).send({
+    "message": "ERR_DENIED"
+  });
+});
+
+
+
+
+//HELPER FUNCTIONS --------------------------------------------
+//Check if a course_list array is a valid array
+function isValidCourseList(course_list) {
+  if(course_list === undefined || course_list.constructor !== Array) return false; //If course_list is not an array
+  let tempcontainer = [];
+  for(i = 0; i < course_list.length; i++) {
+    if(!course_list[i].subject || !course_list[i].catalog_nbr) return false;  //If any course_list element is missing subject or catalog_nbr
+    let validElement = false;
+    //Check if the sent course is a duplicate, if ANY duplicates are seen, return false.
+    for(k = 0; k < tempcontainer.length; k++){
+      if(course_list[i].subject == tempcontainer[k].subject && course_list[i].catalog_nbr == tempcontainer[k].catalog_nbr) return false;
+    }
+    //Check if sent courses are actually in the timetable data or not
+    for(j = 0; j < timetable.length; j++) {
+      if(course_list[i].subject == timetable[j].subject && course_list[i].catalog_nbr == timetable[j].catalog_nbr) {
+        validElement = true;
+        break;
+      }
+    }
+    if(!validElement) return false;   //If any course_list element isn't a valid combo of subject and catalog_nbr (if the combo doesn't exist in the timetable)
+    tempcontainer.push(course_list[i]);
+  }
+  return true;
+}
 
 
 
@@ -804,26 +1046,3 @@ app.get('/app/timetable/:subject', (req, res) => {
 
 
 //UTILITIES -----------------------------------------
-//Check if a course_list array is a valid array
-function isValidCourseList(course_list) {
-  if(course_list === undefined || course_list.constructor !== Array) return false; //If course_list is not an array
-  let tempcontainer = [];
-  for(i = 0; i < course_list.length; i++) {
-    if(!course_list[i].subject || !course_list[i].catalog_nbr) return false;  //If any course_list element is missing subject or catalog_nbr
-    let validElement = false;
-    //Check if the sent course is a duplicate, if ANY duplicates are seen, return false.
-    for(k = 0; k < tempcontainer.length; k++){
-      if(course_list[i].subject == tempcontainer[k].subject && course_list[i].catalog_nbr == tempcontainer[k].catalog_nbr) return false;
-    }
-    //Check if sent courses are actually in the timetable data or not
-    for(j = 0; j < timetable.length; j++) {
-      if(course_list[i].subject == timetable[j].subject && course_list[i].catalog_nbr == timetable[j].catalog_nbr) {
-        validElement = true;
-        break;
-      }
-    }
-    if(!validElement) return false;   //If any course_list element isn't a valid combo of subject and catalog_nbr (if the combo doesn't exist in the timetable)
-    tempcontainer.push(course_list[i]);
-  }
-  return true;
-}

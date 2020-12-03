@@ -46,9 +46,9 @@ ul {
 
 .blocks li {
   padding: 20px;
-  padding-left: 50px;
+  padding-right: 50px;
   border-radius: 30px;
-  width: 90%;
+  width: 70%;
   padding-bottom: 10px;
   margin-bottom: 15px;
   color: #ffffff;

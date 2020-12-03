@@ -21,7 +21,7 @@ export class HttpRequestsService {
 
   // ----- Account management HTTP requests -----------------------------------------------------------------
 
-  /* Using /api/user/login
+  /* Using PUT /api/user/login
      Will return a message and optionally a token value.
   */
   async serverLogIn(email : String, password : String) {
@@ -39,7 +39,7 @@ export class HttpRequestsService {
     } catch(err) { console.log(err); return undefined; }
   }
 
-  /* Using /api/user/signup
+  /* Using POST /api/user/signup
      Will return a message.
   */
   async serverSignUp(username : String, email : String, password : String) {
@@ -59,7 +59,7 @@ export class HttpRequestsService {
 
   }
 
-  /* Using /api/user/check
+  /* Using PUT /api/user/check
      Will return a message, with a potential admin flag.
   */
   async checkUserVerification(wtToken : String) {
@@ -80,7 +80,7 @@ export class HttpRequestsService {
 
   // ----- Common HTTP requests -----------------------------------------------------------------
 
-  /* Using /api/common/subjects
+  /* Using GET /api/common/subjects
      Will return a message and array.
   */
   async getAllSubjectCodes() {
@@ -95,7 +95,7 @@ export class HttpRequestsService {
   }
 
 
-  /* Using /api/common/:subject
+  /* Using GET /api/common/:subject
      Will return a message and array of strings.
   */
   async getAllCourseCodes(subject) {
@@ -110,7 +110,7 @@ export class HttpRequestsService {
   }
 
 
-  /* Using /api/common/timetable
+  /* Using GET /api/common/timetable
      Will return a message and optionally array.
   */
   async getResultsFromQuery(subject : String, catalog_nbr : String, component : String) {
@@ -140,7 +140,7 @@ export class HttpRequestsService {
   }
 
 
-  /* Using /api/common/timetable
+  /* Using GET /api/common/timetable
      Will return a message and optionally array.
   */
   async getResultsFromKeyword(keywords : String) {
@@ -155,6 +155,12 @@ export class HttpRequestsService {
       return result;
     } catch(err) { console.log(err); return undefined; }
   }
+
+
+  // ----- Secure HTTP requests -----------------------------------------------------------------
+
+
+
 
   constructor() { }
 }
