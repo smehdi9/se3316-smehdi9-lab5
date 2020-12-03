@@ -1,7 +1,7 @@
 <div class="courses-form">
   <form class="options" onSubmit="return false;" >
     <h3>Search Courses</h3>
-    <label id="query-errormsg" class="errormsg"></label>
+    <label id="search-errormsg" class="errormsg"></label>
     <br>
     <label for="subject-input">Subect</label><br>
     <select id="subject-input" data-dropup-auto="false" (change)="fillCourselist();"></select>
@@ -17,4 +17,8 @@
       <option value="LAB">LAB</option>
     </select>
   </form>
+</div>
+
+<div class="blocks">
+  <ul id="resultlist"></ul>
 </div>

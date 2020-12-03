@@ -9,6 +9,10 @@ body {
   font-family: "Cascadia Code", plain, sans-serif;
 }
 
+b {
+  color: #80c330;
+}
+
 .form-button {
   float: right;
 	background:linear-gradient(to bottom, #86b517 5%, #77a809 100%);

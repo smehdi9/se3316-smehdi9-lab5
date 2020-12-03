@@ -78,16 +78,13 @@ export class EditSchedulesComponent implements OnInit {
     let results = await this.httpService.getAllSubjectCodes(); //HTTP request
     let subjectList = results.content;
     let inputSelect = <HTMLInputElement>document.getElementById("subject-input");
-    let newOpt = document.createElement("option");
-    let newOptText = document.createTextNode("");
-    newOpt.appendChild(newOptText);
-    inputSelect.appendChild(newOpt);
     for(let i = 0; i < subjectList.length; i++) {
       let newOpt = document.createElement("option");
       let newOptText = document.createTextNode(subjectList[i]);
       newOpt.appendChild(newOptText);
       inputSelect.appendChild(newOpt);
     }
+    this.fillCourselist();
   }
 
 
@@ -101,8 +98,7 @@ export class EditSchedulesComponent implements OnInit {
 
   //Simply clear error messages when any of the forms are clicked
   clearErrors() : void {
-    (<HTMLInputElement>document.getElementById("query-errormsg")).innerText = "";
-    (<HTMLInputElement>document.getElementById("keyword-errormsg")).innerText = "";
+    (<HTMLInputElement>document.getElementById("search-errormsg")).innerText = "";
   }
 
   //Add time table LI to UL
@@ -111,33 +107,19 @@ export class EditSchedulesComponent implements OnInit {
     let textNode = document.createTextNode("");
     //Add button
     let buttonElementDet = document.createElement("button");
-    buttonElementDet.setAttribute("id", "DETAILS " + item.subject + " " + item.catalog_nbr);
-    textNode = document.createTextNode("DETAILS"); buttonElementDet.appendChild(textNode);
+    buttonElementDet.setAttribute("id", "ADD " + item.subject + " " + item.catalog_nbr);
+    textNode = document.createTextNode("ADD"); buttonElementDet.appendChild(textNode);
     buttonElementDet.setAttribute("class", "form-button");
     listElement.appendChild(buttonElementDet);
 
     //Add details
-    let subjectLabel = document.createElement("label"); textNode = document.createTextNode(item.subject); subjectLabel.appendChild(textNode);
-    let courseLabel = document.createElement("label"); textNode = document.createTextNode(item.catalog_nbr); courseLabel.appendChild(textNode);
+    let courseLabel = document.createElement("label"); textNode = document.createTextNode(item.subject + " " + item.catalog_nbr); courseLabel.appendChild(textNode);
     let classNameLabel = document.createElement("label"); textNode = document.createTextNode(item.className); classNameLabel.appendChild(textNode);
-    let sectionLabel = document.createElement("label"); textNode = document.createTextNode(item.class_section); sectionLabel.appendChild(textNode);
-    let componentLabel = document.createElement("label"); textNode = document.createTextNode(item.ssr_component); componentLabel.appendChild(textNode);
-    let startLabel = document.createElement("label"); textNode = document.createTextNode(item.start_time); startLabel.appendChild(textNode);
-    let endLabel = document.createElement("label"); textNode = document.createTextNode(item.end_time); endLabel.appendChild(textNode);
-    let daysLabel = document.createElement("label");
-    let daysString = "";
-    for(let x = 0; x < item.days.length; x++) daysString += item.days[x] + " ";
-    textNode = document.createTextNode(daysString);
-    daysLabel.appendChild(textNode);
+    let breakTag = document.createElement("br");
 
-    listElement.appendChild(subjectLabel);
     listElement.appendChild(courseLabel);
     listElement.appendChild(classNameLabel);
-    listElement.appendChild(sectionLabel);
-    listElement.appendChild(componentLabel);
-    listElement.appendChild(startLabel);
-    listElement.appendChild(endLabel);
-    listElement.appendChild(daysLabel);
+    listElement.appendChild(breakTag);
 
     //This will help with color coding :/
     if(item.ssr_component == "LAB") {

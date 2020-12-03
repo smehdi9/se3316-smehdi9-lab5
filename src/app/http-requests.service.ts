@@ -156,6 +156,30 @@ export class HttpRequestsService {
   }
 
 
+  /* Using GET /api/common/timetable/:subject/:catalog_nbr
+     Will return a message and optionally array.
+  */
+  async getTimetableEntry(subject : String, catalog_nbr : String) {
+    if(subject != "" && subject != undefined && catalog_nbr != "" && catalog_nbr != undefined) {
+      try {
+        const response = await fetch(this.serverURL + '/api/common/timetable/' + subject + "/" + catalog_nbr, {
+          method: "GET",
+          headers: this.headersJSON
+        });
+        let result = await response.json();
+        return result;
+      } catch(err) { console.log(err); return undefined; }
+    }
+    else {
+      return undefined;
+    }
+  }
+
+  penis() {
+    return "penis";
+  }
+
+
   // ----- Secure HTTP requests -----------------------------------------------------------------
 
 

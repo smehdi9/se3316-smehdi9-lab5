@@ -119,45 +119,82 @@ export class SearchCourseComponent implements OnInit {
     }
   }
 
+  //Remove all elements with class todelete
+  deleteToDeletes() {
+    let td = document.getElementsByClassName("todelete");
+    for(let i = 0; i < td.length; i++) {
+      td[i].parentNode.removeChild(td[i]);
+    }
+  }
+
   //Simply clear error messages when any of the forms are clicked
   clearErrors() : void {
     (<HTMLInputElement>document.getElementById("query-errormsg")).innerText = "";
     (<HTMLInputElement>document.getElementById("keyword-errormsg")).innerText = "";
+    //selfReference.deleteToDeletes();
   }
 
   //Add time table LI to UL
   addResultULItem(ul, item) : void {
     let listElement = document.createElement("li");
     let textNode = document.createTextNode("");
-    //Add button
-    let buttonElementDet = document.createElement("button");
-    buttonElementDet.setAttribute("id", "DETAILS " + item.subject + " " + item.catalog_nbr);
-    textNode = document.createTextNode("DETAILS"); buttonElementDet.appendChild(textNode);
-    buttonElementDet.setAttribute("class", "form-button");
-    listElement.appendChild(buttonElementDet);
 
     //Add details
-    let subjectLabel = document.createElement("label"); textNode = document.createTextNode(item.subject); subjectLabel.appendChild(textNode);
-    let courseLabel = document.createElement("label"); textNode = document.createTextNode(item.catalog_nbr); courseLabel.appendChild(textNode);
+    let courseLabel = document.createElement("h2"); textNode = document.createTextNode(item.subject + " " + item.catalog_nbr); courseLabel.appendChild(textNode);
     let classNameLabel = document.createElement("label"); textNode = document.createTextNode(item.className); classNameLabel.appendChild(textNode);
     let sectionLabel = document.createElement("label"); textNode = document.createTextNode(item.class_section); sectionLabel.appendChild(textNode);
     let componentLabel = document.createElement("label"); textNode = document.createTextNode(item.ssr_component); componentLabel.appendChild(textNode);
-    let startLabel = document.createElement("label"); textNode = document.createTextNode(item.start_time); startLabel.appendChild(textNode);
-    let endLabel = document.createElement("label"); textNode = document.createTextNode(item.end_time); endLabel.appendChild(textNode);
+    let timesLabel = document.createElement("label"); textNode = document.createTextNode("Class Times: " + item.start_time + " - " + item.end_time); timesLabel.appendChild(textNode);
     let daysLabel = document.createElement("label");
-    let daysString = "";
+    let daysString = "Days: ";
     for(let x = 0; x < item.days.length; x++) daysString += item.days[x] + " ";
     textNode = document.createTextNode(daysString);
     daysLabel.appendChild(textNode);
+    let breakTag = document.createElement("br");
 
-    listElement.appendChild(subjectLabel);
+    //Add all the details
     listElement.appendChild(courseLabel);
     listElement.appendChild(classNameLabel);
     listElement.appendChild(sectionLabel);
     listElement.appendChild(componentLabel);
-    listElement.appendChild(startLabel);
-    listElement.appendChild(endLabel);
+    listElement.appendChild(timesLabel);
     listElement.appendChild(daysLabel);
+    listElement.appendChild(breakTag);
+
+    let selfReference = this;
+    listElement.onclick = async function() {
+      selfReference.deleteToDeletes();
+      let result = (await selfReference.getTimetableEntry(item.subject, item.catalog_nbr)).content[0];
+      let toDeleteDiv = document.createElement("div");
+      toDeleteDiv.setAttribute("class", "todelete");
+
+      //Expand the DOM of the list element
+      for(let i = 0; i < result.course_info.length; i++) {
+        if(result.course_info[i].ssr_component == item.ssr_component) {
+          let descriptionP = document.createElement("p"); textNode = document.createTextNode(result.catalog_description); descriptionP.appendChild(textNode);
+          let descP = document.createElement("p"); textNode = document.createTextNode(result.course_info[i].descr); descP.appendChild(textNode);
+          let classNumLabel = document.createElement("label"); textNode = document.createTextNode("Class Number: " + result.course_info[i].class_nbr); classNumLabel.appendChild(textNode);
+          let campusLabel = document.createElement("label"); textNode = document.createTextNode("Campus: " + result.course_info[i].campus); campusLabel.appendChild(textNode);
+          let facilityLabel = document.createElement("label"); textNode = document.createTextNode("Facility: " + result.course_info[i].facility_ID); facilityLabel.appendChild(textNode);
+          let instLabel = document.createElement("label");
+          let instString = "Instructors: ";
+          for(let x = 0; x < result.course_info[i].instructors.length; x++) instString += result.course_info[i].instructors[x] + ", ";
+          textNode = document.createTextNode(instString);
+          instLabel.appendChild(textNode);
+          let enrollLabel = document.createElement("label"); textNode = document.createTextNode("STATUS: " + result.course_info[i].enrl_stat); enrollLabel.appendChild(textNode);
+          toDeleteDiv.appendChild(classNumLabel);
+          toDeleteDiv.appendChild(campusLabel);
+          toDeleteDiv.appendChild(facilityLabel);
+          toDeleteDiv.appendChild(instLabel);
+          toDeleteDiv.appendChild(descriptionP);
+          toDeleteDiv.appendChild(descP);
+          toDeleteDiv.appendChild(enrollLabel);
+          listElement.appendChild(toDeleteDiv);
+          listElement.appendChild(breakTag);
+          return;
+        }
+      }
+    };
 
     //This will help with color coding :/
     if(item.ssr_component == "LAB") {
@@ -169,23 +206,13 @@ export class SearchCourseComponent implements OnInit {
     else {
       listElement.setAttribute("class", "lec");
     }
-    //If the course is not full, allow it to be added to course schedule
-    // let selfReference = this;
-    // if(item.course_info[x].enrl_stat == "Not full") {
-    //   buttonElement.onclick = function() {
-    //     let idArr = buttonElement.id.split(" ");
-    //     let subjectID = idArr[1]; let courseID = idArr[2];
-    //     selfReference.addCourseToSchedule(subjectID, courseID);
-    //   };
-    //   buttonElement.setAttribute("class", "add");
-    //   buttonElement.disabled = false;
-    // }
-    // buttonElementDet.onclick = function() {
-    //   let idArr = buttonElement.id.split(" ");
-    //   let subjectID = idArr[1]; let courseID = idArr[2];
-    //   selfReference.showDetails(subjectID, courseID);
-    // };
+
     ul.appendChild(listElement);
+  }
+
+  //Get the specific timetable entry for the given subject/course pair
+  async getTimetableEntry(subject : String, catalog_nbr : String) {
+    return await this.httpService.getTimetableEntry(subject, catalog_nbr);
   }
 
 }
