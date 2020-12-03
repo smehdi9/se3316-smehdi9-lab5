@@ -14,6 +14,7 @@ b {
 }
 
 .form-button {
+  width: 150px;
   float: right;
 	background:linear-gradient(to bottom, #86b517 5%, #77a809 100%);
 	background-color:#86b517;
@@ -38,6 +39,28 @@ b {
 	top:1px;
 }
 
+.remove-button {
+  float: right;
+	background:linear-gradient(to bottom, #b30c20 5%, #7d0917 100%);
+	background-color:#86b517;
+	border-radius:6px;
+	border: none;
+	display:inline-block;
+	cursor:pointer;
+	color:#ffffff;
+	font-family:Arial;
+	font-size:15px;
+	font-weight:bold;
+	padding:6px 16px;
+  margin-top: -25px;
+	text-decoration:none;
+	text-shadow:0px 1px 0px #528009;
+}
+.remove-button:hover {
+	background:linear-gradient(to bottom, #d30c20 5%, #8d0917 100%);
+	background-color:#77a809;
+}
+
 ul {
   list-style-type: none;
 }
@@ -56,6 +79,10 @@ ul {
   padding-bottom: 10px;
   margin-bottom: 15px;
   color: #ffffff;
+}
+
+.todelete {
+  font-size: 13px;
 }
 
 li label {

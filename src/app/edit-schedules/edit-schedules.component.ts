@@ -11,37 +11,84 @@ export class EditSchedulesComponent implements OnInit {
   //HTTP service
   httpService : HttpRequestsService = new HttpRequestsService();
 
+  //This list is temporarily stored on the front end. It is used to replace the existing list on the back ends
+  coursesToUpdate = [];
+
+  //If an existing schedule is select = true, if the option to add new schedule is selected = false
+  selectedSchedule : boolean = false;
+
   constructor() { }
+
+  //If the selected option on the schedule drop down is changed.
+  async changedScheduleSelect() {
+    let scheduleDropDownInput = (<HTMLInputElement>document.getElementById("schedule-dropdown")).value;
+    if(scheduleDropDownInput == "<") {
+      this.selectedSchedule = false;
+      this.emptyElement(document.getElementById("display-container"));
+      document.getElementById("display-container").setAttribute("class", "");
+    }
+    else {
+      this.selectedSchedule = true;
+      let result = await this.httpService.getScheduleByName(scheduleDropDownInput);
+      if(result.message == "SUCCESS") {
+        let scheduleObj = result.content;
+        this.emptyElement(document.getElementById("display-container"));
+        //Add the schedule to a DOM
+        let scheduleDisplay = document.createElement("div");
+        document.getElementById("display-container").setAttribute("class", "schedule-display");
+        let textNode = document.createTextNode("");
+
+        //Add details
+        let nameLabel = document.createElement("h2"); textNode = document.createTextNode(scheduleObj.name); nameLabel.appendChild(textNode);
+        let descriptionP = document.createElement("p"); textNode = document.createTextNode("Description: " + scheduleObj.description); descriptionP.appendChild(textNode);
+        let publicityLabel = document.createElement("p");
+        if(scheduleObj.public) textNode = document.createTextNode("Public");
+        else textNode = document.createTextNode("Private");
+        publicityLabel.appendChild(textNode);
+        let editedLabel = document.createElement("p"); textNode = document.createTextNode("Last Edited: " + Date(scheduleObj.edited).toString()); editedLabel.appendChild(textNode);
+        let numCoursesLabel = document.createElement("p"); textNode = document.createTextNode(scheduleObj.course_list.length + " course(s)"); numCoursesLabel.appendChild(textNode);
+
+        //Set the courses to update array
+        this.coursesToUpdate = scheduleObj.course_list;
+        this.updateTempList();
+
+        scheduleDisplay.appendChild(nameLabel);
+        scheduleDisplay.appendChild(publicityLabel);
+        scheduleDisplay.appendChild(editedLabel);
+        scheduleDisplay.appendChild(numCoursesLabel);
+        scheduleDisplay.appendChild(descriptionP);
+        document.getElementById("display-container").appendChild(scheduleDisplay);
+      }
+      else {
+        (<HTMLInputElement>document.getElementById("schedule-errormsg")).innerText = "Something went wrong";
+        console.log("Something went wrong :(");
+      }
+    }
+  }
 
 
   //When a subject and course code is selected
-  async fillTimetable() {
+  addNewSchedule() {
     let subjectValue = (<HTMLInputElement>document.getElementById("subject-input")).value;
     let courseValue = (<HTMLInputElement>document.getElementById("course-input")).value;
 
-    //If no values are entered, don't search (TOO many results :/ ) or if incorrect input is entered
+    //If no values are entered
     if((subjectValue == undefined || subjectValue == "") &&
        (courseValue == undefined || courseValue == "")) {
        return;
     }
-    //Get array of results
-    let results = await this.httpService.getResultsFromQuery(subjectValue, courseValue, undefined);
-    //Add to DOM
-    if(results.message == "SUCCESS") {
-      //Fill the UL with the results
-      let resultsUL = <HTMLInputElement>document.getElementById("resultlist");
-      this.emptyElement(resultsUL);
-      let contentData = results.content;
-      for(let i = 0; i < contentData.length; i++) {
-        this.addResultULItem(resultsUL, contentData[i]);
+    //Add to DOM - Skip duplicates
+    for(let i = 0; i < this.coursesToUpdate.length; i++) {
+      if(this.coursesToUpdate[i].subject == subjectValue && this.coursesToUpdate[i].catalog_nbr == courseValue) {
+        return;
       }
     }
-    else {
-      this.emptyElement(<HTMLInputElement>document.getElementById("resultlist"));
-      (<HTMLInputElement>document.getElementById("schedule-errormsg")).innerText = "Course not found";
-    }
+    this.coursesToUpdate.push({
+      "subject": subjectValue,
+      "catalog_nbr": courseValue
+    });
+    this.updateTempList();
   }
-
 
   //Fill the optional drop down for the text input field for the selected subject -- Decorative
   async fillCourselist() {
@@ -58,8 +105,29 @@ export class EditSchedulesComponent implements OnInit {
         newOpt.appendChild(newOptText);
         courseDatalist.appendChild(newOpt);
       }
+      this.getCourseName();
     }
-    this.fillTimetable();
+  }
+
+
+  //Get the name of the course selected
+  async getCourseName() {
+    let subjectValue = (<HTMLInputElement>document.getElementById("subject-input")).value;
+    let courseValue = (<HTMLInputElement>document.getElementById("course-input")).value;
+
+    //If no values are entered
+    if((subjectValue == undefined || subjectValue == "") &&
+       (courseValue == undefined || courseValue == "")) {
+       return;
+    }
+
+    let results = await this.httpService.getTimetableEntry(subjectValue, courseValue);
+    if(results.message == "SUCCESS") {
+      (<HTMLInputElement>document.getElementById("selected-course")).innerText = results.content[0].className;
+    }
+    else {
+      (<HTMLInputElement>document.getElementById("selected-course")).innerText = ""
+    }
   }
 
 
@@ -75,6 +143,7 @@ export class EditSchedulesComponent implements OnInit {
     }
     //Otherwise, fill the appropriate data (fill subject drop down and user's schedules drop down)
     else {
+      //Fill the select course form
       let results = await this.httpService.getAllSubjectCodes(); //HTTP request
       let subjectList = results.content;
       let inputSelect = <HTMLInputElement>document.getElementById("subject-input");
@@ -85,6 +154,26 @@ export class EditSchedulesComponent implements OnInit {
         inputSelect.appendChild(newOpt);
       }
       this.fillCourselist();
+
+      //Fill the schedule drop down
+      let schedules = (await this.httpService.getScheduleNamesForUser()).content;
+      let scheduleDropDown = <HTMLInputElement>document.getElementById("schedule-dropdown");
+      this.emptyElement(scheduleDropDown);
+      let newOpt = document.createElement("option");
+      let newOptText = document.createTextNode("ADD NEW SCHEDULE");
+      newOpt.setAttribute("value", "<");
+      newOpt.appendChild(newOptText);
+      scheduleDropDown.appendChild(newOpt);
+      for(let i = 0; i < schedules.length; i++) {
+        newOpt = document.createElement("option");
+        newOptText = document.createTextNode(schedules[i]);
+        newOpt.appendChild(newOptText);
+        scheduleDropDown.appendChild(newOpt);
+      }
+
+      //Fill DOMs
+      this.updateTempList();
+      this.getCourseName()
     }
   }
 
@@ -107,11 +196,10 @@ export class EditSchedulesComponent implements OnInit {
     let listElement = document.createElement("li");
     let textNode = document.createTextNode("");
     //Add button
-    let buttonElementDet = document.createElement("button");
-    buttonElementDet.setAttribute("id", "ADD " + item.subject + " " + item.catalog_nbr);
-    textNode = document.createTextNode("ADD"); buttonElementDet.appendChild(textNode);
-    buttonElementDet.setAttribute("class", "form-button");
-    listElement.appendChild(buttonElementDet);
+    let buttonElement = document.createElement("button");
+    textNode = document.createTextNode("ADD"); buttonElement.appendChild(textNode);
+    buttonElement.setAttribute("class", "form-button");
+    listElement.appendChild(buttonElement);
 
     //Add details
     let courseLabel = document.createElement("label"); textNode = document.createTextNode(item.subject + " " + item.catalog_nbr); courseLabel.appendChild(textNode);
@@ -132,22 +220,57 @@ export class EditSchedulesComponent implements OnInit {
     else {
       listElement.setAttribute("class", "lec");
     }
-    //If the course is not full, allow it to be added to course schedule
-    // let selfReference = this;
-    // if(item.course_info[x].enrl_stat == "Not full") {
-    //   buttonElement.onclick = function() {
-    //     let idArr = buttonElement.id.split(" ");
-    //     let subjectID = idArr[1]; let courseID = idArr[2];
-    //     selfReference.addCourseToSchedule(subjectID, courseID);
-    //   };
-    //   buttonElement.setAttribute("class", "add");
-    //   buttonElement.disabled = false;
-    // }
-    // buttonElementDet.onclick = function() {
-    //   let idArr = buttonElement.id.split(" ");
-    //   let subjectID = idArr[1]; let courseID = idArr[2];
-    //   selfReference.showDetails(subjectID, courseID);
-    // };
+
+    //Add the listed course to the temporary list on the front end.
+    let selfReference = this;
+    buttonElement.onclick = function() {
+      //Skip duplicates
+      for(let i = 0; i < selfReference.coursesToUpdate.length; i++) {
+        if(selfReference.coursesToUpdate[i].subject == item.subject && selfReference.coursesToUpdate[i].catalog_nbr == item.catalog_nbr) {
+          return;
+        }
+      }
+      selfReference.coursesToUpdate.push({
+        "subject": item.subject,
+        "catalog_nbr": item.catalog_nbr
+      });
+      selfReference.updateTempList();
+    };
     ul.appendChild(listElement);
+  }
+
+  //Update so that whatever is in the coursesToUpdate array is added to it's DOM list
+  updateTempList() {
+    let toAddUL = document.getElementById("to-add-list");
+    this.emptyElement(toAddUL);
+    if(this.coursesToUpdate.length == 0) {
+      let newLabel = document.createElement("label");
+      let textNode = document.createTextNode("Empty List");
+      newLabel.appendChild(textNode);
+      toAddUL.appendChild(newLabel);
+    }
+    else {
+      for(let i = 0; i < this.coursesToUpdate.length; i++) {
+        let listElement = document.createElement("li");
+        let buttonElement = document.createElement("button");
+        let textNode = document.createTextNode("REMOVE"); buttonElement.appendChild(textNode);
+        buttonElement.setAttribute("class", "remove-button");
+
+        //Add details
+        let courseLabel = document.createElement("label"); textNode = document.createTextNode(this.coursesToUpdate[i].subject + " " + this.coursesToUpdate[i].catalog_nbr); courseLabel.appendChild(textNode);
+        listElement.appendChild(courseLabel);
+        listElement.appendChild(buttonElement);
+        let breakTag = document.createElement("br");
+        listElement.appendChild(breakTag);
+        toAddUL.appendChild(listElement);
+
+        //Remove the listed course from the temporary list on the front end.
+        let selfReference = this;
+        buttonElement.onclick = function() {
+          selfReference.coursesToUpdate.splice(i, 1);
+          selfReference.updateTempList();
+        };
+      }
+    }
   }
 }

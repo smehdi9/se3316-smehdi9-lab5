@@ -24,6 +24,10 @@ export class UserPanelComponent implements OnInit {
     window.location.replace('/login');   //Redirect to login
   }
 
+  editSchedules() {
+    window.location.replace('/schedules/edit');   //Redirect to editng schedules
+  }
+
 
   //On init
   async ngOnInit() {

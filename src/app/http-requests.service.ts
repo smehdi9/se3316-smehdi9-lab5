@@ -175,13 +175,46 @@ export class HttpRequestsService {
     }
   }
 
-  penis() {
-    return "penis";
-  }
-
 
   // ----- Secure HTTP requests -----------------------------------------------------------------
 
+  /* Using GET /api/secure/schedules
+     Will return a message and optionally array.
+  */
+  async getScheduleNamesForUser() {
+    try {
+      const response = await fetch(this.serverURL + '/api/secure/schedules', {
+        method: "GET",
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'authorization': localStorage.wtToken
+        }
+      });
+      let result = await response.json();
+      return result;
+    } catch(err) { console.log(err); return undefined; }
+  }
+
+  /* Using GET /api/secure/schedules/:name
+     Will return a message and optionally an object.
+  */
+  async getScheduleByName(name : String) {
+    //Dont allow improper inputs
+    if(name == undefined || name == "") return undefined;
+    try {
+      const response = await fetch(this.serverURL + '/api/secure/schedules/' + name, {
+        method: "GET",
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'authorization': localStorage.wtToken
+        }
+      });
+      let result = await response.json();
+      return result;
+    } catch(err) { console.log(err); return undefined; }
+  }
 
 
 

@@ -97,7 +97,7 @@ app.put('/api/user/login', (req, res) => {
       //Log-in check user password
       if(bcrypt.compareSync(login_password, user_list[i].password)) {
         //Sign JWT
-        let token = jwt.sign({"email": user_list[i].email, "admin": user_list[i].admin}, secure_info.jwt_secure_key);
+        let token = jwt.sign({"email": user_list[i].email}, secure_info.jwt_secure_key);
         if(token != undefined) {
           res.send({
             "message": "SUCCESS",
@@ -591,7 +591,7 @@ app.put("/api/secure/schedules", (req, res) => {
   let user_list = usersDB.get("user_list").value();
   for(i = 0; i < user_list.length; i++) {
     if(user_list[i].email == decoded.email) {
-      //Only if the user is verified and not disabled (should likely not happen anyway)
+      //Only if the user is verified and not disabled (should likely not cause a problem anyway)
       if(user_list[i].verified && !user_list[i].disabled) {
         //Only if the course_list exists
         for(j = 0; j < user_list[i].schedule_list.length; j++){
@@ -641,10 +641,9 @@ app.put("/api/secure/schedules", (req, res) => {
 
 //To get the schedules for the given user
 app.get('/api/secure/schedules', (req, res) => {
-  const schema = joi.object({
-    "authorization": joi.string().regex(regexJWT).required()
-  });
-  const resultValidation = schema.validate(req.headers);
+  //Input sanitization -- Make sure token is sent via header
+  const schema = joi.string().regex(regexJWT);
+  const resultValidation = schema.validate(req.headers['authorization']);
   if(resultValidation.error) {
     res.status(400).send({
       "message": "ERR_BAD_HEADER"
@@ -654,7 +653,7 @@ app.get('/api/secure/schedules', (req, res) => {
 
   //Verify token
   let decoded = undefined;   //This will be the token data
-  let token = req.authorization;
+  let token = req.headers['authorization'];
   try {
     decoded = jwt.verify(token, secure_info.jwt_secure_key);
   } catch(err) {
@@ -664,10 +663,93 @@ app.get('/api/secure/schedules', (req, res) => {
     return;
   }
 
-
+  let sched_names = [];   //Array to be returned
+  //Check if user exists
+  let user_list = usersDB.get("user_list").value();
+  for(i = 0; i < user_list.length; i++) {
+    if(user_list[i].email == decoded.email) {
+      //Only if the user is verified and not disabled (should likely not cause a problem anyway)
+      if(user_list[i].verified && !user_list[i].disabled) {
+        //Get all schedule names for a given user
+        for(j = 0; j < user_list[i].schedule_list.length; j++) sched_names.push(user_list[i].schedule_list[j].name);
+        res.send({
+          "message": "SUCCESS",
+          "content": sched_names
+        });
+        return;
+      }
+    }
+  }
+  //If user not found, send denial
+  res.status(403).send({
+    "message": "ERR_DENIED"
+  });
 });
 
 
+//To get the data for a specific schedule for a user
+app.get('/api/secure/schedules/:name', (req, res) => {
+  //Input sanitization -- Make sure token is sent via header
+  let schema = joi.string().regex(regexJWT);
+  let resultValidation = schema.validate(req.headers['authorization']);
+  if(resultValidation.error) {
+    res.status(400).send({
+      "message": "ERR_BAD_HEADER"
+    });
+    return;
+  }
+  schema = joi.object({
+    "name": joi.string().regex(regexSpecialChars).min(2).max(20).required()
+  });
+  resultValidation = schema.validate(req.params);
+  if(resultValidation.error) {
+    res.status(400).send({
+      "message": "ERR_BAD_PARAMS"
+    });
+    return;
+  }
+
+  //Verify token
+  let decoded = undefined;   //This will be the token data
+  let token = req.headers['authorization'];
+  try {
+    decoded = jwt.verify(token, secure_info.jwt_secure_key);
+  } catch(err) {
+    res.status(403).send({
+      "message": "ERR_DENIED"
+    });
+    return;
+  }
+
+  let schedule_name = req.params.name;
+  //Check if user exists
+  let user_list = usersDB.get("user_list").value();
+  for(i = 0; i < user_list.length; i++) {
+    if(user_list[i].email == decoded.email) {
+      //Only if the user is verified and not disabled (should likely not cause a problem anyway)
+      if(user_list[i].verified && !user_list[i].disabled) {
+        //Find the requested schedule
+        for(j = 0; j < user_list[i].schedule_list.length; j++) {
+          if(user_list[i].schedule_list[j].name == schedule_name) {
+            res.send({
+              "message": "SUCCESS",
+              "content": user_list[i].schedule_list[j]
+            });
+            return;
+          }
+        }
+        //If not found, return 404
+        res.status(404).send({
+          "message": "ERR_RESULT_NOT_FOUND"
+        });
+      }
+    }
+  }
+  //If user not found, send denial
+  res.status(403).send({
+    "message": "ERR_DENIED"
+  });
+});
 
 
 //HELPER FUNCTIONS --------------------------------------------

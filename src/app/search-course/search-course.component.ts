@@ -103,8 +103,8 @@ export class SearchCourseComponent implements OnInit {
     newOpt.appendChild(newOptText);
     inputSelect.appendChild(newOpt);
     for(let i = 0; i < subjectList.length; i++) {
-      let newOpt = document.createElement("option");
-      let newOptText = document.createTextNode(subjectList[i]);
+      newOpt = document.createElement("option");
+      newOptText = document.createTextNode(subjectList[i]);
       newOpt.appendChild(newOptText);
       inputSelect.appendChild(newOpt);
     }
@@ -177,6 +177,7 @@ export class SearchCourseComponent implements OnInit {
           let facilityLabel = document.createElement("label"); textNode = document.createTextNode("Facility: " + result.course_info[i].facility_ID); facilityLabel.appendChild(textNode);
           let instLabel = document.createElement("label");
           let instString = "Instructors: ";
+          if(result.course_info[i].instructors.length == 0) instString = "Instructors: Not listed";
           for(let x = 0; x < result.course_info[i].instructors.length; x++) instString += result.course_info[i].instructors[x] + ", ";
           textNode = document.createTextNode(instString);
           instLabel.appendChild(textNode);
@@ -190,6 +191,7 @@ export class SearchCourseComponent implements OnInit {
           toDeleteDiv.appendChild(enrollLabel);
           listElement.appendChild(toDeleteDiv);
           listElement.appendChild(breakTag);
+          //listElement.onclick = selfReference.deleteToDeletes();
           return;
         }
       }
