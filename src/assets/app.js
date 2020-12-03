@@ -752,6 +752,72 @@ app.get('/api/secure/schedules/:name', (req, res) => {
 });
 
 
+//To delete a selected schedule from a user's schedule list
+app.delete('/api/secure/schedules/:name', (req, res) => {
+  //Input sanitization -- Make sure token is sent via header
+  let schema = joi.string().regex(regexJWT);
+  let resultValidation = schema.validate(req.headers['authorization']);
+  if(resultValidation.error) {
+    res.status(400).send({
+      "message": "ERR_BAD_HEADER"
+    });
+    return;
+  }
+  schema = joi.object({
+    "name": joi.string().regex(regexSpecialChars).min(2).max(20).required()
+  });
+  resultValidation = schema.validate(req.params);
+  if(resultValidation.error) {
+    res.status(400).send({
+      "message": "ERR_BAD_PARAMS"
+    });
+    return;
+  }
+
+  //Verify token
+  let decoded = undefined;   //This will be the token data
+  let token = req.headers['authorization'];
+  try {
+    decoded = jwt.verify(token, secure_info.jwt_secure_key);
+  } catch(err) {
+    res.status(403).send({
+      "message": "ERR_DENIED"
+    });
+    return;
+  }
+
+  let schedule_name = req.params.name;
+  //Check if user exists
+  let user_list = usersDB.get("user_list").value();
+  for(i = 0; i < user_list.length; i++) {
+    if(user_list[i].email == decoded.email) {
+      //Only if the user is verified and not disabled (should likely not cause a problem anyway)
+      if(user_list[i].verified && !user_list[i].disabled) {
+        //Find the requested schedule
+        for(j = 0; j < user_list[i].schedule_list.length; j++) {
+          if(user_list[i].schedule_list[j].name == schedule_name) {
+            user_list[i].schedule_list.splice(j, 1);
+            usersDB.set("user_list", user_list).write();    //Modify the list
+            res.send({
+              "message": "SUCCESS"
+            });
+            return;
+          }
+        }
+        //If not found, return 404
+        res.status(404).send({
+          "message": "ERR_RESULT_NOT_FOUND"
+        });
+      }
+    }
+  }
+  //If user not found, send denial
+  res.status(403).send({
+    "message": "ERR_DENIED"
+  });
+});
+
+
 //HELPER FUNCTIONS --------------------------------------------
 //Check if a course_list array is a valid array
 function isValidCourseList(course_list) {
