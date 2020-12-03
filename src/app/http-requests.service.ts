@@ -228,7 +228,7 @@ export class HttpRequestsService {
     //Allow empty description
     else if (description == "" || description == undefined){
       try {
-        const response = await fetch(this.serverURL + '/api/secure/schedules/' + name, {
+        const response = await fetch(this.serverURL + '/api/secure/schedules/', {
           method: "POST",
           headers: this.headersJSON,
           body: JSON.stringify({
@@ -244,7 +244,7 @@ export class HttpRequestsService {
     //If description is given, send that too
     else {
       try {
-        const response = await fetch(this.serverURL + '/api/secure/schedules/' + name, {
+        const response = await fetch(this.serverURL + '/api/secure/schedules/', {
           method: "POST",
           headers: this.headersJSON,
           body: JSON.stringify({
@@ -252,6 +252,55 @@ export class HttpRequestsService {
             "name": name,
             "description": description,
             "course_list": course_list
+          })
+        });
+        let result = await response.json();
+        return result;
+      } catch(err) { console.log(err); return undefined; }
+    }
+  }
+
+
+  /* Using PUT /api/secure/schedules
+     Will only return a message
+  */
+  async editSchedule(name : String, new_name : String, description : String, public : boolean, course_list) {
+    //Disallow empty names
+    if(name == "" || name == undefined) {
+      return;
+    }
+    else if(new_name == "" || new_name == undefined) {
+      return;
+    }
+    //Allow empty description
+    else if (description == "" || description == undefined){
+      try {
+        const response = await fetch(this.serverURL + '/api/secure/schedules/', {
+          method: "PUT",
+          headers: this.headersJSON,
+          body: JSON.stringify({
+            "token": localStorage.wtToken,
+            "name": name,
+            "course_list": course_list,
+            "new_name": new_name
+          })
+        });
+        let result = await response.json();
+        return result;
+      } catch(err) { console.log(err); return undefined; }
+    }
+    //If description is given, send that too
+    else {
+      try {
+        const response = await fetch(this.serverURL + '/api/secure/schedules/', {
+          method: "POST",
+          headers: this.headersJSON,
+          body: JSON.stringify({
+            "token": localStorage.wtToken,
+            "name": name,
+            "course_list": course_list,
+            "new_name": new_name,
+            "description": description
           })
         });
         let result = await response.json();
