@@ -11,7 +11,7 @@ export class HomePageComponent implements OnInit {
   //HTTP service
   httpService : HttpRequestsService = new HttpRequestsService();
 
-  isSignedOut = true;
+  isSignedOut = false;
   title = "Western Timetable";
 
   constructor() { }
@@ -21,7 +21,7 @@ export class HomePageComponent implements OnInit {
     window.location.replace('/login');   //Redirect to login
   }
 
-
+  //Remove the login button on home page if already logged in
   async ngOnInit() {
     //If the user is already logged in,
     if(localStorage.wtToken != "" || localStorage.wtToken != undefined) {
@@ -30,8 +30,12 @@ export class HomePageComponent implements OnInit {
         this.isSignedOut = false;
       }
       else {
+        this.isSignedOut = true;
         localStorage.wtToken = "";
       }
+    }
+    else {
+      this.isSignedOut = true;
     }
   }
 

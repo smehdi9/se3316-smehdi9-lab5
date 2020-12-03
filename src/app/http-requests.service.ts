@@ -56,7 +56,6 @@ export class HttpRequestsService {
       let result = await response.json();
       return result;
     } catch(err) { console.log(err); return undefined; }
-
   }
 
   /* Using PUT /api/user/check

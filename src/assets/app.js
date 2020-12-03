@@ -120,18 +120,18 @@ app.put('/api/user/login', (req, res) => {
 //Sign a new user into the database
 app.post('/api/user/signup', (req, res) => {
   //Input sanitization JOI
-  const schema = joi.object({
-    "email": joi.string().regex(regexEmail).required(),
-    "password": joi.string().regex(regexSpecialChars).min(8).max(30).required(),
-    "username": joi.string().regex(regexSpecialChars).min(4).max(30).required()
-  });
-  const resultValidation = schema.validate(req.body);
-  if(resultValidation.error) {
-    res.status(400).send({
-      "message": "ERR_BAD_BODY"
-    });
-    return;
-  }
+  // const schema = joi.object({
+  //   "email": joi.string().regex(regexEmail).required(),
+  //   "password": joi.string().regex(regexSpecialChars).min(8).max(30).required(),
+  //   "username": joi.string().regex(regexSpecialChars).min(4).max(30).required()
+  // });
+  // const resultValidation = schema.validate(req.body);
+  // if(resultValidation.error) {
+  //   res.status(400).send({
+  //     "message": "ERR_BAD_BODY"
+  //   });
+  //   return;
+  // }
 
   //Check if EMAIL (only email) exists
   let user_list = usersDB.get("user_list").value();
@@ -487,7 +487,6 @@ app.post("/api/secure/schedules", (req, res) => {
     if(user_list[i].email == decoded.email) {
       //Only if the user is verified and not disabled (should likely not happen anyway)
       if(user_list[i].verified && !user_list[i].disabled) {
-        //schedulesDB.set("schedule_list", schedule_list).write();
         for(j = 0; j < user_list[i].schedule_list.length; j++){
           if(user_list[i].schedule_list[j].name == req.body.name) {
             res.status(403).send({
@@ -545,12 +544,15 @@ app.post("/api/secure/schedules", (req, res) => {
 });
 
 
+//To edit an existing schedule
 app.put("/api/secure/schedules", (req, res) => {
   //Input sanitization -- Make sure all required parameters are present
   const schema = joi.object({
     "name": joi.string().regex(regexSpecialChars).min(2).max(20).required(),
+    "new_name": joi.string().regex(regexSpecialChars).min(2).max(20).required(),
     "description": joi.string().regex(regexSpecialChars).max(50),
     "course_list": joi.array().required(),
+    "public": joi.boolean().required(),
     "token": joi.string().regex(regexJWT).required()
   });
   const resultValidation = schema.validate(req.body);
@@ -586,45 +588,40 @@ app.put("/api/secure/schedules", (req, res) => {
     if(user_list[i].email == decoded.email) {
       //Only if the user is verified and not disabled (should likely not happen anyway)
       if(user_list[i].verified && !user_list[i].disabled) {
-        //schedulesDB.set("schedule_list", schedule_list).write();
+        //Only if the course_list exists
         for(j = 0; j < user_list[i].schedule_list.length; j++){
           if(user_list[i].schedule_list[j].name == req.body.name) {
-            res.status(403).send({
-              "message": "ERR_SCHEDULE_EXISTS"
+            let new_sched = {};
+            if(req.body.description != undefined) {
+              new_sched = {
+                "name": req.body.new_name,
+                "description": req.body.description,
+                "public": req.body.public,
+                "course_list": req.body.course_list,
+                "edited": Date.now()
+              };
+            }
+            else {
+              new_sched = {
+                "name": req.body.new_name,
+                "description": "",
+                "public": req.body.public,
+                "course_list": req.body.course_list,
+                "edited": Date.now()
+              };
+            }
+            user_list[i].schedule_list[j] = new_sched;
+            usersDB.set("user_list", user_list).write();
+            res.send({
+              "message": "SUCCESS"
             });
             return;
           }
         }
-        //If the given schedule name doesn't exist, add it to the list for this user
-        let new_sched = {};
-        if(req.body.description != undefined) {
-          new_sched = {
-            "name": req.body.name,
-            "description": req.body.description,
-            "public": false,
-            "course_list": req.body.course_list,
-            "edited": Date.now()
-          };
-        }
-        else {
-          new_sched = {
-            "name": req.body.name,
-            "description": "",
-            "public": false,
-            "course_list": req.body.course_list,
-            "edited": Date.now()
-          };
-        }
-        user_list[i].schedule_list.push(new_sched);
-        usersDB.set("user_list", user_list).write();
-        res.send({
-          "message": "SUCCESS"
-        });
-        return;
-      }
-      else {
-        res.status(403).send({
-          "message": "ERR_DENIED"
+
+        //If the list does not exist, send a not found error
+        res.status(404).send({
+          "message": "ERR_RESULT_NOT_FOUND"
         });
         return;
       }
