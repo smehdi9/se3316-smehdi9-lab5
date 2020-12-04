@@ -8,11 +8,3 @@
   border-radius: 30px;
   vertical-align: top;
 }
-
-.errormsg {
-  width: 200px;
-  font-size: 14px;
-  color: red;
-  display: flex;
-  overflow: hidden;
-}

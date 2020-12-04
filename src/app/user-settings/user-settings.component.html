@@ -1,0 +1,17 @@
+<div class="update-password-menu">
+  <h3>Update Password</h3>
+  <form class="update-pass-form" onsubmit="return false;" (mousedown)="clearErrors();">
+    <label id="update-password-errormsg" class="errormsg"></label>
+    <br>
+    <input type="password" id="current-password" placeholder="Current password">
+    <br>
+    <br>
+    <input type="password" id="new-password" placeholder="New password">
+    <br>
+    <br>
+    <input type="password" id="new-password-check" placeholder="Confirm password">
+    <br>
+    <br>
+    <button class="form-button" (click)="updatePassword();">LOG IN</button>
+  </form>
+</div>

@@ -11,7 +11,8 @@ export class HttpRequestsService {
   */
 
   //The back end server URL
-  serverURL = "http://localhost:3000";
+  serverURLdata = require("./server_url_port.json");
+  serverURL = this.serverURLdata.url + ":" + this.serverURLdata.port;
   //This headers JSON is used repeatedly in every HTTP request
   headersJSON = {
     'Accept': 'application/json',
@@ -68,6 +69,46 @@ export class HttpRequestsService {
         headers: this.headersJSON,
         body: JSON.stringify({
           "token": wtToken,
+        })
+      });
+      let result = await response.json();
+      return result;
+    } catch(err) { console.log(err); return undefined; }
+  }
+
+
+  /* Using PUT /api/user/check/admin
+     Will return a message, with a potential admin flag.
+  */
+  async checkAdminUser(wtToken : String) {
+    try {
+      const response = await fetch(this.serverURL + '/api/user/check/admin', {
+        method: "PUT",
+        headers: this.headersJSON,
+        body: JSON.stringify({
+          "token": wtToken,
+        })
+      });
+      let result = await response.json();
+      return result;
+    } catch(err) { console.log(err); return undefined; }
+  }
+
+
+  /* Using PUT /api/user/update/password
+     Will return only a message
+  */
+  async updatePassword(wtToken : String, new_password : String, current_password : String) {
+    //If the two passwords are the same
+    if(current_password == new_password) return {"message" : "ERR_SAME_PASSWORD"};
+    try {
+      const response = await fetch(this.serverURL + '/api/user/update/password', {
+        method: "PUT",
+        headers: this.headersJSON,
+        body: JSON.stringify({
+          "token": wtToken,
+          "new_password": new_password,
+          "current_password": current_password
         })
       });
       let result = await response.json();
@@ -173,6 +214,26 @@ export class HttpRequestsService {
     else {
       return undefined;
     }
+  }
+
+
+  /* Using PUT /api/common/timetable/mutliple
+     Will return a message and optionally array.
+  */
+  async getEntriesForArray(course_list) {
+    //if the course_list is empty, just return empty list (efficient :D )
+    if(course_list.length == 0) return [];
+    try {
+      const response = await fetch(this.serverURL + '/api/common/timetable/multiple', {
+        method: "PUT",
+        headers: this.headersJSON,
+        body: JSON.stringify({
+            "course_list": course_list
+        })
+      });
+      let result = await response.json();
+      return result;
+    } catch(err) { console.log(err); return undefined; }
   }
 
 

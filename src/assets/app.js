@@ -38,7 +38,11 @@ schedule format:
 }
 */
 const usersDB = lowdb(new FileSync("user_database.json"));
-usersDB.defaults({"user_list": []}).write();
+usersDB.defaults({
+  "user_list": [
+    secure_info.admin_information
+  ]
+}).write();
 
 //This will be a database of all the reviews
 //Each course (subject + catalog_nbr) will have an array associated with it
@@ -241,6 +245,132 @@ app.put('/api/user/check', (req, res) => {
   //If user not found, send denial
   res.status(403).send({
     "message": "ERR_DENIED"
+  });
+});
+
+
+//Check if the sent token is valid and belongs to admin
+app.put('/api/user/check/admin', (req, res) => {
+  //Input sanitization JOI
+  const schema = joi.object({
+    "token": joi.string().regex(regexJWT).required()
+  });
+  const resultValidation = schema.validate(req.body);
+  if(resultValidation.error) {
+    res.status(400).send({
+      "message": "ERR_BAD_BODY"
+    });
+    return;
+  }
+
+  //Verify token
+  let decoded = undefined;   //This will be the token data
+  let token = req.body.token;
+  try {
+    decoded = jwt.verify(token, secure_info.jwt_secure_key);
+  } catch(err) {
+    res.status(403).send({
+      "message": "ERR_DENIED"
+    });
+    return;
+  }
+
+  //Check if user exists
+  let user_list = usersDB.get("user_list").value();
+  for(i = 0; i < user_list.length; i++) {
+    if(user_list[i].email == decoded.email) {
+      //If the user is an admin, they will be allowed unconditionally (Even if disabled)
+      if(user_list[i].verified && user_list[i].admin) {
+        res.send({
+          "message": "SUCCESS",
+          "username": user_list[i].username,
+          "email": user_list[i].email,
+          "admin": user_list[i].admin,
+          "created": user_list[i].created
+        });
+        return;
+      }
+      else {
+        res.status(403).send({
+          "message": "ERR_DENIED"
+        });
+        return;
+      }
+    }
+  }
+  //If user not found, send denial
+  res.status(403).send({
+    "message": "ERR_DENIED"
+  });
+});
+
+
+//Update user password
+app.put('/api/user/update/password', (req, res) => {
+  //Input sanitization JOI
+  const schema = joi.object({
+    "token": joi.string().regex(regexJWT).required(),
+    "current_password": joi.string().min(8).max(30).regex(regexSpecialChars).required(),
+    "new_password": joi.string().min(8).max(30).regex(regexSpecialChars).required(),
+  });
+  const resultValidation = schema.validate(req.body);
+  if(resultValidation.error) {
+    res.status(400).send({
+      "message": "ERR_BAD_BODY"
+    });
+    return;
+  }
+
+  //Verify token
+  let decoded = undefined;   //This will be the token data
+  let token = req.body.token;
+  try {
+    decoded = jwt.verify(token, secure_info.jwt_secure_key);
+  } catch(err) {
+    res.status(403).send({
+      "message": "ERR_DENIED"
+    });
+    return;
+  }
+
+  //Check if the user exists
+  let user_list = usersDB.get("user_list").value();
+  let current_password = req.body.current_password;
+  let new_password = req.body.new_password;
+  for(i = 0; i < user_list.length; i++) {
+    if(user_list[i].email == decoded.email) {
+      //Check if user is verified or disabled
+      if(!user_list[i].verified || user_list[i].disabled) {
+        res.status(403).send({
+          "message": "ERR_DENIED"
+        });
+        return;
+      }
+      //If the current password is correct
+      if(bcrypt.compareSync(current_password, user_list[i].password)) {
+        //Generate the new password hash and add it to the database
+        var salt = bcrypt.genSaltSync(10);
+        var hash = bcrypt.hashSync(new_password, salt);
+        user_list[i].password = hash;
+        user_list[i].salt = salt;
+        //Send success message
+        res.send({
+          "message": "SUCCESS"
+        });
+        return;
+      }
+      else {
+        res.status(403).send({
+          "message": "ERR_INCORRECT_PASSWORD"
+        });
+        return;
+      }
+    }
+  }
+
+  //If the specified email isn't found, send error
+  res.status(404).send({
+    "message": "ERR_RESULT_NOT_FOUND"
   });
 });
 
@@ -452,6 +582,57 @@ app.get('/api/common/timetable', (req, res) => {
     });
     return;
   }
+});
+
+
+//Get the timetable entries for all courses given by a subect/course pair list
+app.put('/api/common/timetable/multiple', (req, res) => {
+  //Input sanitization, confirm proper array
+  const schema = joi.object({
+    "course_list": joi.array().required()
+  });
+  const resultValidation = schema.validate(req.body);
+  if(resultValidation.error) {
+    res.status(400).send({
+      "message": "ERR_BAD_BODY"
+    });
+    return;
+  }
+  //Check if sent course list is valid
+  if(!isValidCourseList(req.body.course_list)) {
+    res.status(400).send({
+      "message": "ERR_BAD_BODY"
+    });
+    return;
+  }
+
+  let send_list = [];
+  //For all of the pairs, pass the timetable entry
+  let course_list = req.body.course_list;
+  for(i = 0; i < course_list.length; i++) {
+    for(j = 0; j < timetable.length; j++) {
+      if(course_list[i].subject == timetable[j].subject && course_list[i].catalog_nbr == timetable[j].catalog_nbr) {
+        //Send in all components for the given course
+        for(k = 0; k < timetable[j].course_info.length; k++) {
+          send_list.push({
+            "subject": timetable[j].subject,
+            "catalog_nbr": timetable[j].catalog_nbr,
+            "className": timetable[j].className,
+            "class_section": timetable[j].course_info[k].class_section,
+            "ssr_component": timetable[j].course_info[k].ssr_component,
+            "start_time": timetable[j].course_info[k].start_time,
+            "end_time": timetable[j].course_info[k].end_time,
+            "days": timetable[j].course_info[k].days
+          });
+        }
+      }
+    }
+  }
+  //Send the list (Even if empty)
+  res.send({
+    "message": "SUCCESS",
+    "content": send_list
+  });
 });
 
 

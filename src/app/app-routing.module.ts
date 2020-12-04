@@ -7,6 +7,7 @@ import { SearchCourseComponent } from './search-course/search-course.component';
 import { UserPanelComponent } from './user-panel/user-panel.component';
 import { EditSchedulesComponent } from './edit-schedules/edit-schedules.component';
 import { ReviewPanelComponent } from './review-panel/review-panel.component';
+import { UserSettingsComponent } from './user-settings/user-settings.component';
 
 const routes: Routes = [
   { path: 'home', component: HomePageComponent },
@@ -15,6 +16,7 @@ const routes: Routes = [
   { path: 'user', component: UserPanelComponent },
   { path: 'schedules/edit', component: EditSchedulesComponent },
   { path: 'reviews/add' , component: ReviewPanelComponent },
+  { path: 'user/settings' , component: UserSettingsComponent },
   { path: '', redirectTo: 'home', pathMatch: 'full' }
 ];
 

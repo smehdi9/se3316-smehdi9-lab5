@@ -81,6 +81,16 @@ ul {
   color: #ffffff;
 }
 
+
+.errormsg {
+  width: 200px;
+  font-size: 14px;
+  color: red;
+  display: flex;
+  overflow: hidden;
+}
+
+
 .todelete {
   font-size: 13px;
 }

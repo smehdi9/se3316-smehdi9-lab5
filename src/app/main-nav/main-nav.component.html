@@ -8,6 +8,8 @@
       <a mat-list-item href="home">Home</a>
       <a mat-list-item href="search">Search Courses</a>
       <a mat-list-item href="schedules/view">Public Schedules</a>
+      <a *ngIf="loggedIn" mat-list-item href="schedules/edit">Edit Schedules</a>
+      <a *ngIf="loggedIn" mat-list-item href="reviews/add">Add Review</a>
       <a *ngIf="loggedIn" mat-list-item href="user">User</a>
     </mat-nav-list>
   </mat-sidenav>

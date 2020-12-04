@@ -15,8 +15,10 @@ export class UserPanelComponent implements OnInit {
   usernameLabel : string = "";
   dateCreatedLabel : string = "";
 
-  constructor() { }
+  //Admin user or not
+  adminUser = false;
 
+  constructor() { }
 
   //Log out the user -- Simply remove the token and redirect to login page
   logOutUser() {
@@ -24,13 +26,11 @@ export class UserPanelComponent implements OnInit {
     window.location.replace('/login');   //Redirect to login
   }
 
-  //Route to other pages
-  editSchedules() {
-    window.location.replace('/schedules/edit');   //Redirect to editng schedules
+  //Update user settings (Password only)
+  updateUserSettings() {
+    window.location.replace('/user/settings');   //Redirect to settings
   }
-  reviewCourses() {
-    window.location.replace('/reviews/add');   //Redirect to editng schedules
-  }
+
 
   //On init
   async ngOnInit() {
@@ -46,6 +46,10 @@ export class UserPanelComponent implements OnInit {
     else {
       this.usernameLabel = result.username;
       this.dateCreatedLabel = (new Date(result.created)).toLocaleDateString("en-CA");
+      result = await this.httpService.checkAdminUser(localStorage.wtToken);
+      if(result.message == "SUCCESS") {
+        this.adminUser = true;
+      }
     }
   }
 

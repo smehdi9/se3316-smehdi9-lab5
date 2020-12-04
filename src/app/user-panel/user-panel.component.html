@@ -1,9 +1,10 @@
 <div class="user-panel">
   <h1>Welcome <b>{{usernameLabel}}</b></h1>
   <p>Created on <b>{{dateCreatedLabel}}</b></p>
-  <button class="form-button" (click)="editSchedules();">SCHEDULES</button>
+  <p *ngIf="adminUser">You are an <b>ADMIN</b></p>
+  <button class="form-button" (click)="updateUserSettings();">ACCOUNT</button>
   <br><br>
-  <button class="form-button" (click)="reviewCourses();">REVIEWS</button>
-  <br><br>
+  <button *ngIf="adminUser" class="form-button" (click)="adminPanel();">ADMIN</button>
+  <br *ngIf="adminUser"><br *ngIf="adminUser">
   <button class="form-button" (click)="logOutUser();">LOG OUT</button>
 </div>

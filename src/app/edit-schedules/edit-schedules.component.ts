@@ -28,6 +28,8 @@ export class EditSchedulesComponent implements OnInit {
       this.selectedSchedule = false;
       this.emptyElement(document.getElementById("display-container"));
       document.getElementById("display-container").setAttribute("class", "");
+      this.coursesToUpdate = [];
+      this.updateTempList();
     }
     else {
       this.selectedSchedule = true;
@@ -59,7 +61,71 @@ export class EditSchedulesComponent implements OnInit {
         scheduleDisplay.appendChild(editedLabel);
         scheduleDisplay.appendChild(numCoursesLabel);
         scheduleDisplay.appendChild(descriptionP);
+        let instructionP = document.createElement("h4"); textNode = document.createTextNode("Click on this panel to expand"); instructionP.appendChild(textNode);
+        scheduleDisplay.appendChild(instructionP);
+
         document.getElementById("display-container").appendChild(scheduleDisplay);
+        //If the panel is clicked, show all time table data
+        let selfReference = this;
+        document.getElementById("display-container").onclick = async function() {
+          //Delete existing DOM
+          let elementsArray = document.getElementById("display-container").getElementsByClassName("blocks");
+          for(let o = 0; o < elementsArray.length; o++) {
+            document.getElementById("display-container").removeChild(elementsArray[o]);
+          }
+
+          let list_pairs = scheduleObj.course_list;
+          let result_search = await selfReference.httpService.getEntriesForArray(list_pairs);
+          if(result_search.message != "SUCCESS") {
+            alert("There was an error");
+            return;
+          }
+          let course_list = result_search.content;
+          let resultsUL = document.createElement("ul");
+          let resultsDiv = document.createElement("div");
+          resultsDiv.setAttribute("class", "blocks");
+          resultsDiv.appendChild(resultsUL);
+          document.getElementById("display-container").appendChild(resultsDiv);
+          for(let i = 0; i < course_list.length; i++) {
+            let listElement = document.createElement("li");
+            let textNode = document.createTextNode("");
+
+            //Add details
+            let courseLabel = document.createElement("h2"); textNode = document.createTextNode(course_list[i].subject + " " + course_list[i].catalog_nbr); courseLabel.appendChild(textNode);
+            let classNameLabel = document.createElement("label"); textNode = document.createTextNode(course_list[i].className); classNameLabel.appendChild(textNode);
+            let sectionLabel = document.createElement("label"); textNode = document.createTextNode(course_list[i].class_section); sectionLabel.appendChild(textNode);
+            let componentLabel = document.createElement("label"); textNode = document.createTextNode(course_list[i].ssr_component); componentLabel.appendChild(textNode);
+            let timesLabel = document.createElement("label"); textNode = document.createTextNode("Class Times: " + course_list[i].start_time + " - " + course_list[i].end_time); timesLabel.appendChild(textNode);
+            let daysLabel = document.createElement("label");
+            let daysString = "Days: ";
+            for(let x = 0; x < course_list[i].days.length; x++) daysString += course_list[i].days[x] + " ";
+            textNode = document.createTextNode(daysString);
+            daysLabel.appendChild(textNode);
+            let breakTag = document.createElement("br");
+
+            //Add all the details
+            listElement.appendChild(courseLabel);
+            listElement.appendChild(classNameLabel);
+            listElement.appendChild(sectionLabel);
+            listElement.appendChild(componentLabel);
+            listElement.appendChild(timesLabel);
+            listElement.appendChild(daysLabel);
+            listElement.appendChild(breakTag);
+
+            //This will help with color coding :/
+            if(course_list[i].ssr_component == "LAB") {
+              listElement.setAttribute("class", "lab");
+            }
+            else if(course_list[i].ssr_component == "TUT") {
+              listElement.setAttribute("class", "tut");
+            }
+            else {
+              listElement.setAttribute("class", "lec");
+            }
+
+            resultsUL.appendChild(listElement);
+          }
+        }
       }
       else {
         (<HTMLInputElement>document.getElementById("schedule-errormsg")).innerText = "Something went wrong";
@@ -284,6 +350,11 @@ export class EditSchedulesComponent implements OnInit {
   //Simply clear error messages when any of the forms are clicked
   clearErrors() : void {
     (<HTMLInputElement>document.getElementById("schedule-errormsg")).innerText = "";
+    //Delete existing DOM
+    let elementsArray = document.getElementById("display-container").getElementsByClassName("blocks");
+    for(let o = 0; o < elementsArray.length; o++) {
+      document.getElementById("display-container").removeChild(elementsArray[o]);
+    }
   }
 
   //Add time table LI to UL

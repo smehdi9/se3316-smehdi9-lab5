@@ -18,6 +18,7 @@ import { SearchCourseComponent } from './search-course/search-course.component';
 import { UserPanelComponent } from './user-panel/user-panel.component';
 import { EditSchedulesComponent } from './edit-schedules/edit-schedules.component';
 import { ReviewPanelComponent } from './review-panel/review-panel.component';
+import { UserSettingsComponent } from './user-settings/user-settings.component';
 
 @NgModule({
   declarations: [
@@ -28,7 +29,8 @@ import { ReviewPanelComponent } from './review-panel/review-panel.component';
     SearchCourseComponent,
     UserPanelComponent,
     EditSchedulesComponent,
-    ReviewPanelComponent
+    ReviewPanelComponent,
+    UserSettingsComponent
   ],
   imports: [
     BrowserModule,

@@ -1,11 +1,7 @@
 <p></p>
 
-<div id="display-container">
-  <!-- Add the schedule open display in here -->
-</div>
-
 <div class="schedules-form">
-  <form onSubmit="return false;" >
+  <form onSubmit="return false;" (click)="clearErrors();">
     <h3>Edit Schedules</h3>
     <label id="schedule-errormsg" class="errormsg"></label>
     <br>
@@ -33,7 +29,7 @@
 </div>
 
 <div class="schedules-form">
-  <form onSubmit="return false;" >
+  <form onSubmit="return false;" (click)="clearErrors();">
     <h3>Search Courses</h3>
     <br>
     <label for="subject-input">Subect</label><br>
@@ -46,6 +42,10 @@
     <br><br>
     <button class="form-button" (click)="addCourseToTempList();">ADD TO LIST</button>
   </form>
+</div>
+
+<div id="display-container">
+  <!-- Add the schedule open display in here -->
 </div>
 
 <div class="temp-list-container">
