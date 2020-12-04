@@ -93,7 +93,14 @@ export class LoginPageComponent implements OnInit {
       (<HTMLInputElement>document.getElementById("log-in-errormsg")).innerText = "Incorrect password";
     }
     else if (result.message == "ERR_USER_UNVERIFIED") {
-      (<HTMLInputElement>document.getElementById("log-in-errormsg")).innerText = "User is not verified, please check your email";
+      if(confirm("Your account is not yet verified. Resend verification email?")) {
+        let result = await this.httpService.resendEmailVerification(emailInput);
+        if(result.message == "SUCCESS") alert("Sent!");
+        else alert(result.message);
+      }
+      else {
+        (<HTMLInputElement>document.getElementById("log-in-errormsg")).innerText = "Account is not yet verified";
+      }
     }
     else if (result.message == "ERR_USER_DISABLED") {
       (<HTMLInputElement>document.getElementById("log-in-errormsg")).innerText = "This user is disabled, please contact an administrator";

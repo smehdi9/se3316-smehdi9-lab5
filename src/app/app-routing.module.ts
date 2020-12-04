@@ -8,6 +8,7 @@ import { UserPanelComponent } from './user-panel/user-panel.component';
 import { EditSchedulesComponent } from './edit-schedules/edit-schedules.component';
 import { ReviewPanelComponent } from './review-panel/review-panel.component';
 import { UserSettingsComponent } from './user-settings/user-settings.component';
+import { VerifiedPageComponent } from './verified-page/verified-page.component';
 
 const routes: Routes = [
   { path: 'home', component: HomePageComponent },
@@ -17,6 +18,7 @@ const routes: Routes = [
   { path: 'schedules/edit', component: EditSchedulesComponent },
   { path: 'reviews/add' , component: ReviewPanelComponent },
   { path: 'user/settings' , component: UserSettingsComponent },
+  { path: 'user/verify' , component: VerifiedPageComponent },
   { path: '', redirectTo: 'home', pathMatch: 'full' }
 ];
 

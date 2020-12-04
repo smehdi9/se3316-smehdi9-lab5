@@ -11,8 +11,7 @@ export class HttpRequestsService {
   */
 
   //The back end server URL
-  serverURLdata = require("./server_url_port.json");
-  serverURL = this.serverURLdata.url + ":" + this.serverURLdata.port;
+  serverURL = "http://localhost:3000";
   //This headers JSON is used repeatedly in every HTTP request
   headersJSON = {
     'Accept': 'application/json',
@@ -109,6 +108,42 @@ export class HttpRequestsService {
           "token": wtToken,
           "new_password": new_password,
           "current_password": current_password
+        })
+      });
+      let result = await response.json();
+      return result;
+    } catch(err) { console.log(err); return undefined; }
+  }
+
+
+  /* Using POST /api/user/verify
+     Will return only a message
+  */
+  async verifyUserViaToken(vToken : string) {
+    try {
+      const response = await fetch(this.serverURL + '/api/user/verify', {
+        method: "POST",
+        headers: this.headersJSON,
+        body: JSON.stringify({
+          "token": vToken
+        })
+      });
+      let result = await response.json();
+      return result;
+    } catch(err) { console.log(err); return undefined; }
+  }
+
+
+  /* Using PUT /api/user/verify/resend
+     Will return only a message
+  */
+  async resendEmailVerification(email : String) {
+    try {
+      const response = await fetch(this.serverURL + '/api/user/verify/resend', {
+        method: "PUT",
+        headers: this.headersJSON,
+        body: JSON.stringify({
+          "email": email
         })
       });
       let result = await response.json();

@@ -39,6 +39,8 @@ export class UserSettingsComponent implements OnInit {
     let result = await this.httpService.updatePassword(localStorage.wtToken, newPassValue, currentPassValue);
     if(result.message == "SUCCESS") {
       alert("Password updated");
+      //Refresh
+      window.location.replace('/user');
     }
     else if(result.message == "ERR_SAME_PASSWORD") {
       (<HTMLInputElement>document.getElementById("update-password-errormsg")).innerText = "New and old password must be different";
@@ -49,9 +51,6 @@ export class UserSettingsComponent implements OnInit {
     else {
       (<HTMLInputElement>document.getElementById("update-password-errormsg")).innerText = "Something went wrong";
     }
-
-    //Refresh
-    window.location.replace('/user');
   }
 
 

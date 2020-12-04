@@ -7,10 +7,13 @@ const jwt = require("jsonwebtoken");
 const stringSimilarity = require("string-similarity");
 //Password dependency
 const bcrypt = require("bcryptjs");
+//To send verification emails
+const nodemailer = require("nodemailer");
 
 const app = express();
 const timetable = require("./Lab3-timetable-data.json");      //All timetable data
 const secure_info = require("./secure_info.json");
+
 
 //The users db/json file -----
 /*
@@ -134,7 +137,7 @@ app.put('/api/user/login', (req, res) => {
 
 
 //Sign a new user into the database
-app.post('/api/user/signup', (req, res) => {
+app.post('/api/user/signup', async(req, res) => {
   //Input sanitization JOI
   const schema = joi.object({
     "email": joi.string().regex(regexEmail).required(),
@@ -174,13 +177,16 @@ app.post('/api/user/signup', (req, res) => {
   var salt = bcrypt.genSaltSync(10);
   var hash = bcrypt.hashSync(signup_password, salt);
 
+  let verification_token = jwt.sign({"email": signup_email, "verified": false}, secure_info.jwt_secure_key);
+  await sendVerificationEmail(signup_email, verification_token);
+
   let new_user = {
     "email": signup_email,
     "password": hash,
     "user_salt": salt,
     "username": signup_username,
     "admin": false,
-    "verified": true,
+    "verified": false,
     "disabled": false,
     "created": Date.now(),
     "schedule_list": []       //This list will store all the schedules for the given user
@@ -369,6 +375,123 @@ app.put('/api/user/update/password', (req, res) => {
   }
 
   //If the specified email isn't found, send error
+  res.status(404).send({
+    "message": "ERR_RESULT_NOT_FOUND"
+  });
+});
+
+
+//Verify user's email
+app.post("/api/user/verify", (req, res) => {
+  //Input sanitization JOI -- Just need a token
+  let schema = joi.object({
+    "token": joi.string().regex(regexJWT).required()
+  });
+  let resultValidation = schema.validate(req.body);
+  if(resultValidation.error) {
+    res.status(400).send({
+      "message": "ERR_BAD_BODY"
+    });
+    return;
+  }
+  //Verify token
+  let decoded = undefined;   //This will be the token data
+  let token = req.body.token;
+  try {
+    decoded = jwt.verify(token, secure_info.jwt_secure_key);
+  } catch(err) {
+    res.status(403).send({
+      "message": "ERR_DENIED"
+    });
+    return;
+  }
+  //Since this token is of a different format than the other LOGIN token that we have used
+  //Throughout our backend, we will try to verif the format of this token to ensure it isn't
+  //A simple login token. This token will include an email and a verified boolean
+  schema = joi.object({
+    "email": joi.string().regex(regexEmail).required(),
+    "verified": joi.boolean().required(),
+    "iat": joi.number()
+    //Tokens have an issued at number. We don't need it but it will be provided so we need to add it here to allow the token through
+  });
+  resultValidation = schema.validate(decoded);
+  if(resultValidation.error) {
+    res.status(400).send({
+      "message": "ERR_BAD_TOKEN"
+    });
+    return;
+  }
+
+  //Find user
+  let user_list = usersDB.get("user_list").value();
+  let verify_email = decoded.email;
+  for(i = 0; i < user_list.length; i++) {
+    if(user_list[i].email == verify_email) {
+      //If already verified
+      if(user_list[i].verified) {
+        res.status(403).send({
+          "message": "ERR_ALREADY_VERIFIED"
+        });
+        return;
+      }
+      else {
+        //Verify user
+        user_list[i].verified = true;
+        usersDB.set("user_list", user_list).write();
+        res.send({
+          "message": "SUCCESS"
+        });
+        return;
+      }
+    }
+  }
+  //If user doesn't exist
+  res.status(404).send({
+    "message": "ERR_RESULT_NOT_FOUND"
+  });
+  return;
+});
+
+
+//Resend a verification token
+app.put("/api/user/verify/resend", async(req, res) => {
+  //Input sanitization JOI
+  const schema = joi.object({
+    "email": joi.string().regex(regexEmail).required()
+  });
+  const resultValidation = schema.validate(req.body);
+  if(resultValidation.error) {
+    res.status(400).send({
+      "message": "ERR_BAD_BODY"
+    });
+    return;
+  }
+
+  //Find user
+  let user_list = usersDB.get("user_list").value();
+  let verify_email = req.body.email;
+  for(i = 0; i < user_list.length; i++) {
+    if(user_list[i].email == verify_email) {
+      //If already verified
+      if(user_list[i].verified) {
+        res.status(403).send({
+          "message": "ERR_ALREADY_VERIFIED"
+        });
+        return;
+      }
+      else {
+        //Send verification
+        let verification_token = jwt.sign({"email": verify_email, "verified": false}, secure_info.jwt_secure_key);
+        await sendVerificationEmail(verify_email, verification_token);
+
+        res.send({
+          "message": "SUCCESS"
+        });
+        return;
+      }
+    }
+  }
+  //If user doesn't exist
   res.status(404).send({
     "message": "ERR_RESULT_NOT_FOUND"
   });
@@ -1205,6 +1328,34 @@ function isValidCourseList(course_list) {
     tempcontainer.push(course_list[i]);
   }
   return true;
+}
+
+
+//Send email for verifying the email address
+async function sendVerificationEmail(signup_email, verification_token) {
+
+  let htmlString = '<h2>Western Timetable Verification</h2><p>Please press the following link to verify your email:</p><a href="' + secure_info.frontend_url + '/user/verify?token=' + verification_token + '">VERIFY</a>'
+
+  /* Code taken from nodemailer website https://nodemailer.com/about/ */
+
+  let transporter = nodemailer.createTransport({
+    "host": "smtp.gmail.com",
+    "port": 465,
+    "secure": true,
+    "auth": {
+      "user": secure_info.email,
+      "pass": secure_info.main_email_password,
+    },
+    "tls":{
+      "rejectUnauthorized": false,
+    }
+  });//secure_info.transporter);
+  let info = await transporter.sendMail({
+    from: '"Western Timetable" <' + secure_info.email + '>',
+    to: signup_email,
+    subject: "Western Timetable Verification ✔",
+    html: htmlString,
+  });
 }
 
 

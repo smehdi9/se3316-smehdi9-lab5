@@ -19,6 +19,7 @@ import { UserPanelComponent } from './user-panel/user-panel.component';
 import { EditSchedulesComponent } from './edit-schedules/edit-schedules.component';
 import { ReviewPanelComponent } from './review-panel/review-panel.component';
 import { UserSettingsComponent } from './user-settings/user-settings.component';
+import { VerifiedPageComponent } from './verified-page/verified-page.component';
 
 @NgModule({
   declarations: [
@@ -30,7 +31,8 @@ import { UserSettingsComponent } from './user-settings/user-settings.component';
     UserPanelComponent,
     EditSchedulesComponent,
     ReviewPanelComponent,
-    UserSettingsComponent
+    UserSettingsComponent,
+    VerifiedPageComponent
   ],
   imports: [
     BrowserModule,
