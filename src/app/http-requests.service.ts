@@ -473,5 +473,121 @@ export class HttpRequestsService {
   }
 
 
+  // ----- Admin HTTP requests -----------------------------------------------------------------
+
+  /* Using GET /api/admin/reviews
+     Will return a message and optionally an array
+  */
+  async getAllReviews() {
+    try {
+      const response = await fetch(this.serverURL + '/api/admin/reviews', {
+        method: "GET",
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'authorization': localStorage.wtToken
+        }
+      });
+      let result = await response.json();
+      return result;
+    } catch(err) { console.log(err); return undefined; }
+  }
+
+
+  /* Using POST /api/admin/reviews/hidden/:subject/:catalog_nbr
+     Will return a message.
+  */
+  async toggleReviewStatus(subject : String, catalog_nbr : String, author : String) {
+    try {
+      const response = await fetch(this.serverURL + '/api/admin/reviews/hidden/' + subject + "/" + catalog_nbr, {
+        method: "POST",
+        headers: this.headersJSON,
+        body: JSON.stringify({
+          "author": author,
+          "token": localStorage.wtToken
+        })
+      });
+      let result = await response.json();
+      return result;
+    } catch(err) { console.log(err); return undefined; }
+  }
+
+
+  /* Using GET /api/admin/users
+     Will return a message and optionally an array
+  */
+  async getListUsers() {
+    try {
+      const response = await fetch(this.serverURL + '/api/admin/users', {
+        method: "GET",
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'authorization': localStorage.wtToken
+        }
+      });
+      let result = await response.json();
+      return result;
+    } catch(err) { console.log(err); return undefined; }
+  }
+
+
+  /* Using POST /api/admin/users/enable
+     Will return a message.
+  */
+  async activateUser(email : String) {
+    try {
+      const response = await fetch(this.serverURL + '/api/admin/users/enable', {
+        method: "POST",
+        headers: this.headersJSON,
+        body: JSON.stringify({
+          "email": email,
+          "token": localStorage.wtToken
+        })
+      });
+      let result = await response.json();
+      return result;
+    } catch(err) { console.log(err); return undefined; }
+  }
+
+
+  /* Using POST /api/admin/users/disable
+     Will return a message.
+  */
+  async deactivateUser(email : String) {
+    try {
+      const response = await fetch(this.serverURL + '/api/admin/users/disable', {
+        method: "POST",
+        headers: this.headersJSON,
+        body: JSON.stringify({
+          "email": email,
+          "token": localStorage.wtToken
+        })
+      });
+      let result = await response.json();
+      return result;
+    } catch(err) { console.log(err); return undefined; }
+  }
+
+
+  /* Using POST /api/admin/users/promote
+     Will return a message.
+  */
+  async promoteUser(email : String) {
+    try {
+      const response = await fetch(this.serverURL + '/api/admin/users/promote', {
+        method: "POST",
+        headers: this.headersJSON,
+        body: JSON.stringify({
+          "email": email,
+          "token": localStorage.wtToken
+        })
+      });
+      let result = await response.json();
+      return result;
+    } catch(err) { console.log(err); return undefined; }
+  }
+
+
   constructor() { }
 }

@@ -20,6 +20,9 @@ import { EditSchedulesComponent } from './edit-schedules/edit-schedules.componen
 import { ReviewPanelComponent } from './review-panel/review-panel.component';
 import { UserSettingsComponent } from './user-settings/user-settings.component';
 import { VerifiedPageComponent } from './verified-page/verified-page.component';
+import { AdminReviewComponent } from './admin-review/admin-review.component';
+import { AdminUsersComponent } from './admin-users/admin-users.component';
+import { AdminDmcaComponent } from './admin-dmca/admin-dmca.component';
 
 @NgModule({
   declarations: [
@@ -32,7 +35,10 @@ import { VerifiedPageComponent } from './verified-page/verified-page.component';
     EditSchedulesComponent,
     ReviewPanelComponent,
     UserSettingsComponent,
-    VerifiedPageComponent
+    VerifiedPageComponent,
+    AdminReviewComponent,
+    AdminUsersComponent,
+    AdminDmcaComponent
   ],
   imports: [
     BrowserModule,

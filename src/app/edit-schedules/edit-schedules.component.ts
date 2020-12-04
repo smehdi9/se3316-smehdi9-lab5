@@ -14,7 +14,7 @@ export class EditSchedulesComponent implements OnInit {
   //This list is temporarily stored on the front end. It is used to replace the existing list on the back ends
   coursesToUpdate = [];
   //Input regex
-  regexSpecialChars = /^[^<>:/?#@.\\!$&'()*+,;=]*$/;
+  regexSpecialChars = /^[^<>:/?#@\\/!$&'()*+,;=]*$/;
 
   //If an existing schedule is select = true, if the option to add new schedule is selected = false
   selectedSchedule : boolean = false;
@@ -77,7 +77,6 @@ export class EditSchedulesComponent implements OnInit {
           let list_pairs = scheduleObj.course_list;
           let result_search = await selfReference.httpService.getEntriesForArray(list_pairs);
           if(result_search.message != "SUCCESS") {
-            alert("There was an error");
             return;
           }
           let course_list = result_search.content;
@@ -130,6 +129,7 @@ export class EditSchedulesComponent implements OnInit {
       else {
         (<HTMLInputElement>document.getElementById("schedule-errormsg")).innerText = "Something went wrong";
         console.log("Something went wrong :(");
+        return;
       }
     }
   }
@@ -224,11 +224,16 @@ export class EditSchedulesComponent implements OnInit {
     if(result.message == "SUCCESS") {
       alert("Schedule added");
     }
+    else if (result.message == "ERR_MAX_REACHED"){
+      (<HTMLInputElement>document.getElementById("schedule-errormsg")).innerText = "You can only create upto 20 schedules";
+      return;
+    }
     else {
       (<HTMLInputElement>document.getElementById("schedule-errormsg")).innerText = "Something went wrong";
+      return;
     }
     //Refresh page
-    this.ngOnInit();
+    location.reload();
   }
 
 
@@ -264,9 +269,10 @@ export class EditSchedulesComponent implements OnInit {
     }
     else {
       (<HTMLInputElement>document.getElementById("schedule-errormsg")).innerText = "Something went wrong";
+      return;
     }
     //Refresh page
-    this.ngOnInit();
+    location.reload();
   }
 
 
@@ -284,10 +290,11 @@ export class EditSchedulesComponent implements OnInit {
           alert(scheduleDropDownInput + " successfully deleted");
         } else {
           (<HTMLInputElement>document.getElementById("schedule-errormsg")).innerText = "Something went wrong";
+          return;
         }
       }
       //Refresh page
-      this.ngOnInit();
+      location.reload();
     }
   }
 

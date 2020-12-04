@@ -4,7 +4,9 @@
   <p *ngIf="adminUser">You are an <b>ADMIN</b></p>
   <button class="form-button" (click)="updateUserSettings();">ACCOUNT</button>
   <br><br>
-  <button *ngIf="adminUser" class="form-button" (click)="adminPanel();">ADMIN</button>
+  <button *ngIf="adminUser" class="form-button" (click)="adminReviewPanel();">REVIEWS</button>
+  <br *ngIf="adminUser"><br *ngIf="adminUser">
+  <button *ngIf="adminUser" class="form-button" (click)="adminUsersPanel();">USERS</button>
   <br *ngIf="adminUser"><br *ngIf="adminUser">
   <button class="form-button" (click)="logOutUser();">LOG OUT</button>
 </div>

@@ -1,0 +1,15 @@
+<div class="users-form">
+  <form onSubmit="return false;" (mousedown)="clearErrors();">
+    <h3>Manage Users</h3>
+    <label id="user-errormsg" class="errormsg"></label>
+    <br>
+    <label for="user-input">User</label><br>
+    <select id="user-input" data-dropup-auto="false" (change)="setLocalVals();"></select>
+    <br><br>
+    <button class="form-button" (click)="activateUser();">ACTIVATE</button>
+    <br><br>
+    <button class="form-button" (click)="deactivateUser();">DEACTIVATE</button>
+    <br><br>
+    <button class="form-button" (click)="setUserAdmin();">SET ADMIN</button>
+  </form>
+</div>

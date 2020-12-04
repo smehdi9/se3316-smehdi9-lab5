@@ -31,6 +31,16 @@ export class UserPanelComponent implements OnInit {
     window.location.replace('/user/settings');   //Redirect to settings
   }
 
+  //Redirect to admin reviews panel (Only accessible for admins)
+  adminReviewPanel() {
+    window.location.replace('/admin/reviews');
+  }
+
+  //Redirect to admin users panel (Only accessible for admins)
+  adminUsersPanel() {
+    window.location.replace('/admin/users');
+  }
+
 
   //On init
   async ngOnInit() {

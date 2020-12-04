@@ -11,7 +11,7 @@ export class ReviewPanelComponent implements OnInit {
   //HTTP service
   httpService : HttpRequestsService = new HttpRequestsService();
   //Input regex
-  regexSpecialChars = /^[^<>:/?#@.\\!$&'()*+,;=]*$/;
+  regexSpecialChars = /^[^<>:/?#@\\/!$&'()*+,;=]*$/;
 
   constructor() { }
 
@@ -34,6 +34,11 @@ export class ReviewPanelComponent implements OnInit {
       return;
     }
 
+    //Ask for confirmation
+    if(!confirm("Your review will be added. Ok to confirm")) {
+      return;
+    }
+
     //If the input is valid, add the review
     let result = (await this.httpService.addReview(subjectValue, courseValue, reviewValue)).message;
     if(result == "SUCCESS") {
@@ -44,7 +49,7 @@ export class ReviewPanelComponent implements OnInit {
     }
 
     //Refresh
-    this.ngOnInit();
+    location.reload();
   }
 
 

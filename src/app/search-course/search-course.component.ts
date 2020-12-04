@@ -11,7 +11,7 @@ export class SearchCourseComponent implements OnInit {
   //HTTP service
   httpService : HttpRequestsService = new HttpRequestsService();
   //Proper input format
-  regexSpecialChars = /^[^<>:/?#@.\\!$&'()*+,;=]*$/;
+  regexSpecialChars = /^[^<>:/?#@\\/!$&'()*+,;=]*$/;
 
   constructor() { }
 
@@ -206,7 +206,7 @@ export class SearchCourseComponent implements OnInit {
               reviewDiv.setAttribute("class", "review-item");
               let userLabel = document.createElement("p"); textNode = document.createTextNode("Created by: " + review_list[j].username); userLabel.appendChild(textNode);
               let dateLabel = document.createElement("p"); textNode = document.createTextNode("Date created: " + (new Date(review_list[j].created)).toString()); dateLabel.appendChild(textNode);
-              let reviewP = document.createElement("p"); textNode = document.createTextNode("Review: " + review_list[j].review); reviewP.appendChild(textNode);
+              let italics = document.createElement("i"); let reviewP = document.createElement("p"); textNode = document.createTextNode("\"" + review_list[j].review + "\""); italics.appendChild(textNode); reviewP.appendChild(italics);
               reviewDiv.appendChild(userLabel);
               reviewDiv.appendChild(dateLabel);
               reviewDiv.appendChild(reviewP);

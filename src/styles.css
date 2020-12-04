@@ -81,7 +81,6 @@ ul {
   color: #ffffff;
 }
 
-
 .errormsg {
   width: 200px;
   font-size: 14px;
@@ -101,6 +100,7 @@ ul {
   border-radius: 5px;
   padding-top: 5px;
   padding-bottom: 2px;
+  padding-right: 50px;
   margin-bottom: 5px;
 }
 

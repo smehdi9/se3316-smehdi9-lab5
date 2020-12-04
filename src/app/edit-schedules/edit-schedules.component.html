@@ -1,7 +1,7 @@
 <p></p>
 
 <div class="schedules-form">
-  <form onSubmit="return false;" (click)="clearErrors();">
+  <form onSubmit="return false;" (mousedown)="clearErrors();">
     <h3>Edit Schedules</h3>
     <label id="schedule-errormsg" class="errormsg"></label>
     <br>
@@ -23,13 +23,13 @@
     <br><br>
     <button *ngIf="selectedSchedule" class="form-button" (click)="deleteSchedule();">DELETE</button>
     <ng-template #addNew>
-      <button class="form-button" (click)="addNewSchedule();">ADD</button>
+      <button class="form-button" (click)="addNewSchedule();">SAVE</button>
     </ng-template>
   </form>
 </div>
 
 <div class="schedules-form">
-  <form onSubmit="return false;" (click)="clearErrors();">
+  <form onSubmit="return false;" (mousedown)="clearErrors();">
     <h3>Search Courses</h3>
     <br>
     <label for="subject-input">Subect</label><br>
