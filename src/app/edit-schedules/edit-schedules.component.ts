@@ -14,7 +14,7 @@ export class EditSchedulesComponent implements OnInit {
   //This list is temporarily stored on the front end. It is used to replace the existing list on the back ends
   coursesToUpdate = [];
   //Input regex
-  regexSpecialChars = /^[^<>:/?#@.!$&'()*+,;=]*$/;
+  regexSpecialChars = /^[^<>:/?#@.\\!$&'()*+,;=]*$/;
 
   //If an existing schedule is select = true, if the option to add new schedule is selected = false
   selectedSchedule : boolean = false;
@@ -47,7 +47,7 @@ export class EditSchedulesComponent implements OnInit {
         if(scheduleObj.public) textNode = document.createTextNode("Public");
         else textNode = document.createTextNode("Private");
         publicityLabel.appendChild(textNode);
-        let editedLabel = document.createElement("p"); textNode = document.createTextNode("Last Edited: " + Date(scheduleObj.edited).toString()); editedLabel.appendChild(textNode);
+        let editedLabel = document.createElement("p"); textNode = document.createTextNode("Last Edited: " + (new Date(scheduleObj.edited)).toString()); editedLabel.appendChild(textNode);
         let numCoursesLabel = document.createElement("p"); textNode = document.createTextNode(scheduleObj.course_list.length + " course(s)"); numCoursesLabel.appendChild(textNode);
 
         //Set the courses to update array
@@ -136,8 +136,8 @@ export class EditSchedulesComponent implements OnInit {
 
   //Add a new schedule
   async addNewSchedule() {
-    let newNameInput = (<HTMLInputElement>document.getElementById("new-name-input")).value;
-    let descInput = (<HTMLInputElement>document.getElementById("description-input")).value;
+    let newNameInput = (<HTMLInputElement>document.getElementById("new-name-input")).value.trim();
+    let descInput = (<HTMLInputElement>document.getElementById("description-input")).value.trim();
 
     //Input validation
     if(newNameInput.length < 2 || newNameInput.length > 20) {
@@ -162,16 +162,19 @@ export class EditSchedulesComponent implements OnInit {
       (<HTMLInputElement>document.getElementById("schedule-errormsg")).innerText = "Something went wrong";
     }
     //Refresh page
-    ngOnInit();
+    this.ngOnInit();
   }
 
 
   //Edit an existing schedule
-  async addNewSchedule() {
-    let nameInput = (<HTMLInputElement>document.getElementById("schedule-dropdown")).value;
-    let newNameInput = (<HTMLInputElement>document.getElementById("new-name-input")).value;
-    let descInput = (<HTMLInputElement>document.getElementById("description-input")).value;
+  async updateSchedule() {
+    let nameInput = (<HTMLInputElement>document.getElementById("schedule-dropdown")).value.trim();
+    let newNameInput = (<HTMLInputElement>document.getElementById("new-name-input")).value.trim();
+    let descInput = (<HTMLInputElement>document.getElementById("description-input")).value.trim();
     let publicInput = (<HTMLInputElement>document.getElementById("public-input")).checked;     //Boolean
+
+    //Idk if I should do this
+    //if(newNameInput == "" || newNameInput == undefined) newNameInput = nameInput;   //If no new name is added, simply use existing name
 
     //Input validation
     if(newNameInput.length < 2 || newNameInput.length > 20) {
@@ -182,13 +185,13 @@ export class EditSchedulesComponent implements OnInit {
       (<HTMLInputElement>document.getElementById("schedule-errormsg")).innerText = "Description must be 50 characters max";
       return;
     }
-    else if (!newNameInput.match(this.regexSpecialChars) || !descInput.match(this.regexSpecialChars) || !!nameInput.match(this.regexSpecialChars)) {
+    else if (!newNameInput.match(this.regexSpecialChars) || !descInput.match(this.regexSpecialChars) || !nameInput.match(this.regexSpecialChars)) {
       (<HTMLInputElement>document.getElementById("schedule-errormsg")).innerText = "Input fields may have illegal characters";
       return;
     }
 
     //The checkbox will always return either true or false in our code
-    let result = await this.httpService.createNewSchedule(nameInput, newNameInput, descInput, publicInput, this.coursesToUpdate);    //The course list will be gotten directly from coursesToUpdate array
+    let result = await this.httpService.editSchedule(nameInput, newNameInput, descInput, publicInput, this.coursesToUpdate);    //The course list will be gotten directly from coursesToUpdate array
 
     if(result.message == "SUCCESS") {
       alert("Schedule modified");
@@ -197,7 +200,7 @@ export class EditSchedulesComponent implements OnInit {
       (<HTMLInputElement>document.getElementById("schedule-errormsg")).innerText = "Something went wrong";
     }
     //Refresh page
-    ngOnInit();
+    this.ngOnInit();
   }
 
 
@@ -218,7 +221,7 @@ export class EditSchedulesComponent implements OnInit {
         }
       }
       //Refresh page
-      ngOnInit();
+      this.ngOnInit();
     }
   }
 

@@ -1,0 +1,20 @@
+<div class="schedules-form">
+  <form onSubmit="return false;">
+    <h3>Search Courses</h3>
+    <br>
+    <label id="review-errormsg" class="errormsg"></label>
+    <br>
+    <label for="subject-input">Subect</label><br>
+    <select id="subject-input" data-dropup-auto="false" (change)="fillCourselist();"></select>
+    <br><br>
+    <label for="course-input">Course</label><br>
+    <select id="course-input" data-dropup-auto="false" (change)="getCourseName();"></select>
+    <br><br>
+    <label id="selected-course"></label>
+    <br><br>
+    <label for="review-input">Review</label><br>
+    <textarea id="review-input" rows="4" cols="80" placeholder="Upto 150 characters, please add a brief description on your thoughts about this course. Once you add this review, you can update it any time. You can only have one review per course. Adding a new one will replace your previous review."></textarea>
+    <br><br>
+    <button class="form-button" (click)="addReview();">ADD REVIEW</button>
+  </form>
+</div>

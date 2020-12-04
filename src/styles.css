@@ -85,6 +85,15 @@ ul {
   font-size: 13px;
 }
 
+.review-item {
+  background:linear-gradient(to bottom, #333333 5%, #353535 100%);
+  padding-left: 20px;
+  border-radius: 5px;
+  padding-top: 5px;
+  padding-bottom: 2px;
+  margin-bottom: 5px;
+}
+
 li label {
   display: block;
 }
@@ -92,6 +101,13 @@ li label {
 input, select {
   width: 240px;
   height: 30px;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+textarea {
   display: inline-block;
   border: 1px solid #ccc;
   border-radius: 4px;

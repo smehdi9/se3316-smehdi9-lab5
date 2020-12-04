@@ -176,6 +176,26 @@ export class HttpRequestsService {
   }
 
 
+  /* Using GET /api/common/timetable/:subject/:catalog_nbr
+     Will return a message and optionally array.
+  */
+  async getReviewList(subject : String, catalog_nbr : String) {
+    if(subject != "" && subject != undefined && catalog_nbr != "" && catalog_nbr != undefined) {
+      try {
+        const response = await fetch(this.serverURL + '/api/common/reviews/' + subject + "/" + catalog_nbr, {
+          method: "GET",
+          headers: this.headersJSON
+        });
+        let result = await response.json();
+        return result;
+      } catch(err) { console.log(err); return undefined; }
+    }
+    else {
+      return undefined;
+    }
+  }
+
+
   // ----- Secure HTTP requests -----------------------------------------------------------------
 
   /* Using GET /api/secure/schedules
@@ -264,7 +284,7 @@ export class HttpRequestsService {
   /* Using PUT /api/secure/schedules
      Will only return a message
   */
-  async editSchedule(name : String, new_name : String, description : String, public : boolean, course_list) {
+  async editSchedule(name : String, new_name : String, description : String, publicInp : boolean, course_list) {
     //Disallow empty names
     if(name == "" || name == undefined) {
       return;
@@ -282,7 +302,8 @@ export class HttpRequestsService {
             "token": localStorage.wtToken,
             "name": name,
             "course_list": course_list,
-            "new_name": new_name
+            "new_name": new_name,
+            "public": publicInp
           })
         });
         let result = await response.json();
@@ -293,14 +314,15 @@ export class HttpRequestsService {
     else {
       try {
         const response = await fetch(this.serverURL + '/api/secure/schedules/', {
-          method: "POST",
+          method: "PUT",
           headers: this.headersJSON,
           body: JSON.stringify({
             "token": localStorage.wtToken,
             "name": name,
             "course_list": course_list,
             "new_name": new_name,
-            "description": description
+            "description": description,
+            "public": publicInp
           })
         });
         let result = await response.json();
@@ -330,6 +352,29 @@ export class HttpRequestsService {
     } catch(err) { console.log(err); return undefined; }
   }
 
+
+  /* Using PUT /api/secure/reviews/:subject/:catalog_nbr
+     Will return a message
+  */
+  async addReview(subject : String, catalog_nbr : String, review : String) {
+    if(subject != "" && subject != undefined && catalog_nbr != "" && catalog_nbr != undefined) {
+      try {
+        const response = await fetch(this.serverURL + '/api/secure/reviews/' + subject + "/" + catalog_nbr, {
+          method: "PUT",
+          headers: this.headersJSON,
+          body: JSON.stringify({
+            "token": localStorage.wtToken,
+            "review": review
+          })
+        });
+        let result = await response.json();
+        return result;
+      } catch(err) { console.log(err); return undefined; }
+    }
+    else {
+      return undefined;
+    }
+  }
 
 
   constructor() { }

@@ -11,7 +11,7 @@ export class SearchCourseComponent implements OnInit {
   //HTTP service
   httpService : HttpRequestsService = new HttpRequestsService();
   //Proper input format
-  regexSpecialChars = /^[^<>:/?#@.!$&'()*+,;=]*$/;
+  regexSpecialChars = /^[^<>:/?#@.\\!$&'()*+,;=]*$/;
 
   constructor() { }
 
@@ -192,6 +192,31 @@ export class SearchCourseComponent implements OnInit {
           listElement.appendChild(toDeleteDiv);
           listElement.appendChild(breakTag);
           //listElement.onclick = selfReference.deleteToDeletes();
+
+          //Get all reviews
+          let resultRev = await selfReference.httpService.getReviewList(item.subject, item.catalog_nbr);
+          //If reviews exist, add DOM
+          if(resultRev.message == "SUCCESS") {
+            let reviewTitle = document.createElement("h3"); textNode = document.createTextNode("All user reviews:"); reviewTitle.appendChild(textNode);
+            toDeleteDiv.appendChild(reviewTitle);
+            let review_list = resultRev.content;
+            //For all reviews, add to the div
+            for(let j = 0; j < review_list.length; j++) {
+              let reviewDiv = document.createElement("div");
+              reviewDiv.setAttribute("class", "review-item");
+              let userLabel = document.createElement("p"); textNode = document.createTextNode("Created by: " + review_list[j].username); userLabel.appendChild(textNode);
+              let dateLabel = document.createElement("p"); textNode = document.createTextNode("Date created: " + (new Date(review_list[j].created)).toString()); dateLabel.appendChild(textNode);
+              let reviewP = document.createElement("p"); textNode = document.createTextNode("Review: " + review_list[j].review); reviewP.appendChild(textNode);
+              reviewDiv.appendChild(userLabel);
+              reviewDiv.appendChild(dateLabel);
+              reviewDiv.appendChild(reviewP);
+              toDeleteDiv.appendChild(reviewDiv);
+            }
+          }
+          else {
+            let reviewTitle = document.createElement("h3"); textNode = document.createTextNode("No reviews found"); reviewTitle.appendChild(textNode);
+            toDeleteDiv.appendChild(reviewTitle);
+          }
           return;
         }
       }

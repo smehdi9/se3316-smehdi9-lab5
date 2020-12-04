@@ -40,8 +40,15 @@ schedule format:
 const usersDB = lowdb(new FileSync("user_database.json"));
 usersDB.defaults({"user_list": []}).write();
 
+//This will be a database of all the reviews
+//Each course (subject + catalog_nbr) will have an array associated with it
+//Will be developed gradually, the courses will not be added right immediately
+const reviewsDB = lowdb(new FileSync("review_database.json"));
+reviewsDB.defaults({"course_list": []}).write();
+
+
 //The various regex used in this api
-const regexSpecialChars = /^[^<>:/?#@.!$&'()*+,;=]*$/;
+const regexSpecialChars = /^[^<>:/?#@.\\!$&'()*+,;=]*$/;
 const regexEmail = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
 /*
@@ -356,6 +363,7 @@ app.get('/api/common/timetable', (req, res) => {
     if(componentID != undefined) componentID = componentID.replace(/\s/g,'').toUpperCase();
     for(i = 0; i < timetable.length; i++) {
       //Match if either subject or course ID is provided
+      //If a letter does not exist at the end of the query course ID, then remove the number from the database course ID check too
       let courseIDCheck = timetable[i].catalog_nbr.toString();
       if(!isNaN(courseID)) {
         courseIDCheck = courseIDCheck.replace(/\D/g,'');
@@ -446,6 +454,54 @@ app.get('/api/common/timetable', (req, res) => {
   }
 });
 
+
+//Get a review for a course (with only username, no email)
+app.get('/api/common/reviews/:subject/:catalog_nbr', (req, res) => {
+  const schema = joi.object({
+    "subject": joi.string().regex(regexSpecialChars).min(2).max(8).required(),
+    "catalog_nbr": joi.string().regex(regexSpecialChars).min(4).max(5).required()
+  });
+  const resultValidation = schema.validate(req.params);
+  if(resultValidation.error) {
+    res.status(400).send({
+      "message": "ERR_BAD_PARAMS"
+    });
+    return;
+  }
+
+  const subjectName = req.params.subject.toUpperCase();
+  const catalog_nbr = req.params.catalog_nbr.toUpperCase();
+
+  let review_database = reviewsDB.get("course_list").value();
+  let return_list = [];
+  //See if the course list passed actually exists
+  for(i = 0; i < review_database.length; i++) {
+    if(review_database[i].subject == subjectName && review_database[i].catalog_nbr == catalog_nbr) {
+      for(j = 0; j < review_database[i].review_list.length; j++) {
+        //If the review isn't hidden
+        if(!review_database[i].review_list[j].hidden) {
+          return_list.push({
+            "username": review_database[i].review_list[j].username,
+            "created": review_database[i].review_list[j].created,
+            "review": review_database[i].review_list[j].review,
+          });
+        }
+      }
+    }
+  }
+  //If no review for the course found, send message. Otherwise, send the list
+  if(return_list.length == 0) {
+    res.status(404).send({
+      "message": "ERR_RESULT_NOT_FOUND"
+    });
+  }
+  else {
+    res.send({
+      "message": "SUCCESS",
+      "content": return_list
+    });
+  }
+});
 
 
 /* --------- SECURE ROUTES --------- */
@@ -742,6 +798,7 @@ app.get('/api/secure/schedules/:name', (req, res) => {
         res.status(404).send({
           "message": "ERR_RESULT_NOT_FOUND"
         });
+        return;
       }
     }
   }
@@ -808,6 +865,132 @@ app.delete('/api/secure/schedules/:name', (req, res) => {
         res.status(404).send({
           "message": "ERR_RESULT_NOT_FOUND"
         });
+        return;
+      }
+    }
+  }
+  //If user not found, send denial
+  res.status(403).send({
+    "message": "ERR_DENIED"
+  });
+});
+
+
+//Add a review to a course (A new review will replace the old one)
+app.put('/api/secure/reviews/:subject/:catalog_nbr', (req, res) => {
+  //Input sanitization -- Make sure all required parameters are present
+  let schema = joi.object({
+    "token": joi.string().regex(regexJWT).required(),
+    "review": joi.string().regex(regexSpecialChars).min(1).max(150).required()
+  });
+  let resultValidation = schema.validate(req.body);
+  if(resultValidation.error) {
+    res.status(400).send({
+      "message": "ERR_BAD_BODY"
+    });
+    return;
+  }
+  schema = joi.object({
+    "subject": joi.string().regex(regexSpecialChars).min(2).max(8).required(),
+    "catalog_nbr": joi.string().regex(regexSpecialChars).min(4).max(5).required()
+  });
+  resultValidation = schema.validate(req.params);
+  if(resultValidation.error) {
+    res.status(400).send({
+      "message": "ERR_BAD_PARAMS"
+    });
+    return;
+  }
+
+  //Verify token
+  let decoded = undefined;   //This will be the token data
+  let token = req.body.token;
+  try {
+    decoded = jwt.verify(token, secure_info.jwt_secure_key);
+  } catch(err) {
+    res.status(403).send({
+      "message": "ERR_DENIED"
+    });
+    return;
+  }
+
+  const subjectName = req.params.subject.toUpperCase();
+  const catalog_nbr = req.params.catalog_nbr.toUpperCase();
+
+  //See if the subject course code exists
+  let exists = false;
+  for(i = 0; i < timetable.length; i++) {
+    if(timetable[i].subject == subjectName && timetable[i].catalog_nbr == catalog_nbr) {
+      exists = true;
+      break;
+    }
+  }
+  if(!exists) {
+    //If not found, return 404
+    res.status(404).send({
+      "message": "ERR_RESULT_NOT_FOUND"
+    });
+    return;
+  }
+
+  //Check if user exists
+  let user_list = usersDB.get("user_list").value();
+  let review_database = reviewsDB.get("course_list").value();
+  for(i = 0; i < user_list.length; i++) {
+    if(user_list[i].email == decoded.email) {
+      //Only if the user is verified and not disabled (should likely not cause a problem anyway)
+      if(user_list[i].verified && !user_list[i].disabled) {
+        //Check if the course is already in the database, add the review if found
+        for(j = 0; j < review_database.length; j++) {
+          if(review_database[j].subject == subjectName && review_database[j].catalog_nbr == catalog_nbr) {
+            //Find the user's review in the list of reviews
+            for(k = 0; k < review_database[j].review_list.length; k++) {
+              if(review_database[j].review_list[k].email == user_list[i].email) {
+                review_database[j].review_list[k].created = Date.now();
+                review_database[j].review_list[k].review = req.body.review;
+                reviewsDB.set("course_list", review_database).write();
+                //Send return message
+                res.send({
+                  "message": "SUCCESS"
+                });
+                return;
+              }
+            }
+            review_database[j].review_list.push({
+              "username": user_list[i].username,
+              "email": user_list[i].email,
+              "created": Date.now(),
+              "review": req.body.review,
+              "hidden": false
+            });
+            reviewsDB.set("course_list", review_database).write();
+            //Send return message
+            res.send({
+              "message": "SUCCESS"
+            });
+            return;
+          }
+        }
+        //Otherwise, add the course as a new array entry
+        review_database.push({
+          "subject": subjectName,
+          "catalog_nbr": catalog_nbr,
+          "review_list": [
+            {
+              "username": user_list[i].username,
+              "email": user_list[i].email,
+              "created": Date.now(),
+              "review": req.body.review,
+              "hidden": false
+            }
+          ]
+        });
+        reviewsDB.set("course_list", review_database).write();
+        //Send return message
+        res.send({
+          "message": "SUCCESS"
+        });
+        return;
       }
     }
   }

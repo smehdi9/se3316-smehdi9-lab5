@@ -24,10 +24,13 @@ export class UserPanelComponent implements OnInit {
     window.location.replace('/login');   //Redirect to login
   }
 
+  //Route to other pages
   editSchedules() {
     window.location.replace('/schedules/edit');   //Redirect to editng schedules
   }
-
+  reviewCourses() {
+    window.location.replace('/reviews/add');   //Redirect to editng schedules
+  }
 
   //On init
   async ngOnInit() {

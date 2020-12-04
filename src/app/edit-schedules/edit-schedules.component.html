@@ -23,7 +23,7 @@
     <label *ngIf="selectedSchedule" for="public-input">Public </label>
     <input *ngIf="selectedSchedule" type="checkbox" id="public-input" class="checkbox">
     <br *ngIf="selectedSchedule"><br *ngIf="selectedSchedule">
-    <button *ngIf="selectedSchedule; else addNew" class="form-button" (click)="updateSchedule();">UPDATE</button>
+    <button *ngIf="selectedSchedule; else addNew" class="form-button" (click)="updateSchedule();">SAVE</button>
     <br><br>
     <button *ngIf="selectedSchedule" class="form-button" (click)="deleteSchedule();">DELETE</button>
     <ng-template #addNew>
