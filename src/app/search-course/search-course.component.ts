@@ -50,9 +50,9 @@ export class SearchCourseComponent implements OnInit {
   async fillTimetableByKeyword() {
     let keywordsVal = (<HTMLInputElement>document.getElementById("keyword-input")).value;
 
-    //Ensure valid input
-    if(keywordsVal.length < 1 || keywordsVal.length > 50 || !keywordsVal.match(this.regexSpecialChars)) {
-      (<HTMLInputElement>document.getElementById("keyword-errormsg")).innerText = "Improper input";
+    //Ensure valid input (minimum 4)
+    if(keywordsVal.length < 4 || keywordsVal.length > 50 || !keywordsVal.match(this.regexSpecialChars)) {
+      (<HTMLInputElement>document.getElementById("keyword-errormsg")).innerText = "Improper input (4-50 characters, no illegal inputs)";
     }
     else {
       //Get array of results

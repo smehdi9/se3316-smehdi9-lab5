@@ -709,6 +709,60 @@ app.get('/api/common/timetable', (req, res) => {
 });
 
 
+//Get recent 10 public schedules
+app.get('/api/common/schedules/public', (req, res) => {
+  //Slow algorithm but it works. Go through all schedule lists and add the most recent one until 10 are added
+  let count = 0;
+  let num_schedules = getNumberOfSchedules();
+  let user_list = usersDB.get("user_list").value();
+  let return_list = [];
+  //Until all schedules are added or the recent 10
+  while(count < num_schedules && count < 10) {
+    let max_time = 0;
+    let toadd_schedule = {"edited": 0};
+    //Get the most recent schedule
+    for(i = 0; i < user_list.length; i++) {
+      for(j = 0; j < user_list[i].schedule_list.length; j++) {
+        if(user_list[i].schedule_list[j].edited >= max_time) {
+          //Only for public lists
+          if(user_list[i].schedule_list[j].public) {
+            //Skip if already added
+            let skip = false;
+            for(k = 0; k < return_list.length; k++) {
+              if(return_list[k].edited == user_list[i].schedule_list[j].edited) {
+                skip = true;
+                break;
+              }
+            }
+            if(!skip) {
+              max_time = user_list[i].schedule_list[j].edited;
+              toadd_schedule = {
+                "name": user_list[i].schedule_list[j].name,
+                "edited": user_list[i].schedule_list[j].edited,
+                "description": user_list[i].schedule_list[j].description,
+                "course_list": user_list[i].schedule_list[j].course_list,
+                "author": user_list[i].username
+              };
+            }
+          }
+        }
+      }
+    }
+
+    //When the next recent schedule is found, add it to the list
+    return_list.push(toadd_schedule);
+    count++;
+  }
+
+  //Send even if list empty
+  res.send({
+    "message": "SUCCESS",
+    "content": return_list
+  });
+
+});
+
+
 //Get the timetable entries for all courses given by a subject/course pair list
 app.put('/api/common/timetable/multiple', (req, res) => {
   //Input sanitization, confirm proper array
@@ -746,7 +800,8 @@ app.put('/api/common/timetable/multiple', (req, res) => {
             "ssr_component": timetable[j].course_info[k].ssr_component,
             "start_time": timetable[j].course_info[k].start_time,
             "end_time": timetable[j].course_info[k].end_time,
-            "days": timetable[j].course_info[k].days
+            "days": timetable[j].course_info[k].days,
+            "description": timetable[j].catalog_description
           });
         }
       }
@@ -1534,7 +1589,7 @@ app.post('/api/admin/users/disable', (req, res) => {
   for(j = 0; j < user_list.length; j++) {
     if(user_list[j].email == user_email) {
       if(!user_list[j].admin) {
-        user_list[j].disabled = false;
+        user_list[j].disabled = true;
         usersDB.set("user_list", user_list).write();
         //Send return message
         res.send({
@@ -1735,6 +1790,18 @@ async function sendVerificationEmail(signup_email, verification_token) {
   });
 }
 
+
+//Get the number of total courses in the database
+function getNumberOfSchedules() {
+  let num = 0;
+  let user_list = usersDB.get("user_list").value();
+  for(i = 0; i < user_list.length; i++) {
+    for(j = 0; j < user_list[i].schedule_list.length; j++) {
+      if(user_list[i].schedule_list[j].public) num++;
+    }
+  }
+  return num;
+}
 
 
 

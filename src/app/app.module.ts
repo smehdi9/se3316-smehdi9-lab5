@@ -23,6 +23,7 @@ import { VerifiedPageComponent } from './verified-page/verified-page.component';
 import { AdminReviewComponent } from './admin-review/admin-review.component';
 import { AdminUsersComponent } from './admin-users/admin-users.component';
 import { AdminDmcaComponent } from './admin-dmca/admin-dmca.component';
+import { PublicSchedulesComponent } from './public-schedules/public-schedules.component';
 
 @NgModule({
   declarations: [
@@ -38,7 +39,8 @@ import { AdminDmcaComponent } from './admin-dmca/admin-dmca.component';
     VerifiedPageComponent,
     AdminReviewComponent,
     AdminUsersComponent,
-    AdminDmcaComponent
+    AdminDmcaComponent,
+    PublicSchedulesComponent
   ],
   imports: [
     BrowserModule,

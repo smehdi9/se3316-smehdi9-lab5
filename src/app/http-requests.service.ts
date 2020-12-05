@@ -232,6 +232,21 @@ export class HttpRequestsService {
   }
 
 
+  /* using GET /api/common/schedules/public
+     Will return an array of schedules
+  */
+  async getPublicSchedules() {
+    try {
+      const response = await fetch(this.serverURL + '/api/common/schedules/public', {
+        method: "GET",
+        headers: this.headersJSON
+      });
+      let result = await response.json();
+      return result;
+    } catch(err) { console.log(err); return undefined; }
+  }
+
+
   /* Using GET /api/common/timetable/:subject/:catalog_nbr
      Will return a message and optionally array.
   */
