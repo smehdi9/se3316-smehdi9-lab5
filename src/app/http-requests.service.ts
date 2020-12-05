@@ -307,21 +307,6 @@ export class HttpRequestsService {
   }
 
 
-  /* Using GET /api/common/dmca
-     Will return an object of 4 strings.
-  */
-  async getDMCA() {
-    try {
-      const response = await fetch(this.serverURL + '/api/common/dmca', {
-        method: "GET",
-        headers: this.headersJSON
-      });
-      let result = await response.json();
-      return result;
-    } catch(err) { console.log(err); return undefined; }
-  }
-
-
   /* Using PUT /api/common/dmca/notices
   */
   async submitDMCANotice(notice : String) {

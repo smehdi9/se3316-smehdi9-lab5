@@ -514,15 +514,9 @@ app.put("/api/user/verify/resend", async(req, res) => {
 /* --------- COMMON ROUTES --------- */
 
 //Get all the DMCA policies
-app.get('/api/common/dmca', (req, res) => {
-  //Simply send the string values to the front-end
-  res.send({
-    "message": "SUCCESS",
-    "dmca_policy": dmca_policy,
-    "aup_policy": aup_policy,
-    "takedown_policy": takedown_policy
-  })
-});
+app.get('/api/common/dmca_policy', (req, res) => {res.send(dmca_policy)});
+app.get('/api/common/aup_policy', (req, res) => {res.send(aup_policy)});
+app.get('/api/common/takedown_policy', (req, res) => {res.send(takedown_policy)});
 
 
 //Allow anyone to add a DMCA notice
@@ -1923,6 +1917,7 @@ app.delete('/api/admin/dmca/notices', (req, res) => {
       res.send({
         "message": "SUCCESS"
       });
+      return;
     }
   }
   //If not found

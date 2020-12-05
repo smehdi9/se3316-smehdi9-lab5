@@ -65,21 +65,14 @@ export class AdminDmcaComponent implements OnInit {
     }
     //Fill DMCA forms with existing DMCA data to be updated
     else {
-      let result = await this.httpService.getDMCA();
-      if(result.message == "SUCCESS") {
-        (<HTMLInputElement>document.getElementById("dmca-policy-input")).innerText = result.dmca_policy;
-        (<HTMLInputElement>document.getElementById("aup-policy-input")).innerText = result.aup_policy;
-        (<HTMLInputElement>document.getElementById("takedown-policy-input")).innerText = result.takedown_policy;
-
-        //Fill DMCA notice dropdown
-        let results = await this.httpService.getDMCANotices();
-        if(results.message == "SUCCESS") {
-          let list = results.content;
-          for(let i = 0; i < list.length; i++) {
-            list[i].date = (new Date(list[i].iat)).toLocaleDateString("en-CA");
-          }
-          this.listNotices = list;
+      //Fill DMCA notice dropdown
+      let results = await this.httpService.getDMCANotices();
+      if(results.message == "SUCCESS") {
+        let list = results.content;
+        for(let i = 0; i < list.length; i++) {
+          list[i].date = (new Date(list[i].iat)).toLocaleDateString("en-CA");
         }
+        this.listNotices = list;
       }
     }
   }
