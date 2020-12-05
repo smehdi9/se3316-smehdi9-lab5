@@ -600,7 +600,7 @@ app.get('/api/common/timetable', (req, res) => {
   });
   //Input sanitization JOI -- ENSURE keyword
   const schemaKeyword = joi.object({
-    "keywords": joi.string().regex(regexSpecialChars).min(1).max(50).required()
+    "keywords": joi.string().regex(regexSpecialChars).min(4).max(50).required()
   });
   const resultValidationQuery = schemaQuery.validate(req.query);
   const resultValidationKeyword = schemaKeyword.validate(req.query);
@@ -661,7 +661,7 @@ app.get('/api/common/timetable', (req, res) => {
   else if (!resultValidationKeyword.error) {
     let subjects = [];
     let keywords = req.query.keywords.toUpperCase();    //All catalog_nbr and className data is in UPPERCASE
-    const minimumSimilarity = 0.6;    //Minimum similarity needed
+    const minimumSimilarity = 0.6;    //Minimum similarity needed (This value is a reasonable amount for the criteria provided)
 
     for(i = 0; i < timetable.length; i++) {
       let courseSim = stringSimilarity.compareTwoStrings(keywords, timetable[i].catalog_nbr.toString());
