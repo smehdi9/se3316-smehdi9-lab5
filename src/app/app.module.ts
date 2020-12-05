@@ -24,6 +24,7 @@ import { AdminReviewComponent } from './admin-review/admin-review.component';
 import { AdminUsersComponent } from './admin-users/admin-users.component';
 import { AdminDmcaComponent } from './admin-dmca/admin-dmca.component';
 import { PublicSchedulesComponent } from './public-schedules/public-schedules.component';
+import { DmcaPanelComponent } from './dmca-panel/dmca-panel.component';
 
 @NgModule({
   declarations: [
@@ -40,7 +41,8 @@ import { PublicSchedulesComponent } from './public-schedules/public-schedules.co
     AdminReviewComponent,
     AdminUsersComponent,
     AdminDmcaComponent,
-    PublicSchedulesComponent
+    PublicSchedulesComponent,
+    DmcaPanelComponent
   ],
   imports: [
     BrowserModule,

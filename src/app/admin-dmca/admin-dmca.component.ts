@@ -13,6 +13,8 @@ export class AdminDmcaComponent implements OnInit {
   //Regex for DMCA
   regexDMCA = /^[^<>/?#@\\/!$&'*+;=]*$/;
 
+  listNotices = [];
+
   constructor() { }
 
   async updateDMCA() {
@@ -36,6 +38,22 @@ export class AdminDmcaComponent implements OnInit {
     }
   }
 
+  redirectReviews() {
+    window.location.replace("/admin/reviews");
+  }
+
+  async deleteNotice() {
+    let iatVal = (<HTMLInputElement>document.getElementById("notice-iat")).value;
+    if(iatVal.length == 0) {
+      alert("There is no notice/appeal to remove");
+      return;
+    }
+    let result = await this.httpService.deleteNotice(iatVal);
+    alert(result.message);
+    //Refresh
+    location.reload();
+  }
+
   //Initialize the forms with the existing DMCA fields
   async ngOnInit() {
     //Ensure that the user is an admin user.
@@ -52,6 +70,16 @@ export class AdminDmcaComponent implements OnInit {
         (<HTMLInputElement>document.getElementById("dmca-policy-input")).innerText = result.dmca_policy;
         (<HTMLInputElement>document.getElementById("aup-policy-input")).innerText = result.aup_policy;
         (<HTMLInputElement>document.getElementById("takedown-policy-input")).innerText = result.takedown_policy;
+
+        //Fill DMCA notice dropdown
+        let results = await this.httpService.getDMCANotices();
+        if(results.message == "SUCCESS") {
+          let list = results.content;
+          for(let i = 0; i < list.length; i++) {
+            list[i].date = (new Date(list[i].iat)).toLocaleDateString("en-CA");
+          }
+          this.listNotices = list;
+        }
       }
     }
   }

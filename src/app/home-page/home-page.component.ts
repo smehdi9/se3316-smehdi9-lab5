@@ -29,6 +29,7 @@ export class HomePageComponent implements OnInit {
       alert(result.dmca_policy);
       alert(result.aup_policy);
       alert(result.takedown_policy);
+      window.location.replace('/dmca');
     }
     else {
       console.log("There was an error :(");

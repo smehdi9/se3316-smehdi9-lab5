@@ -322,6 +322,23 @@ export class HttpRequestsService {
   }
 
 
+  /* Using PUT /api/common/dmca/notices
+  */
+  async submitDMCANotice(notice : String) {
+    try {
+      const response = await fetch(this.serverURL + '/api/common/dmca/notices', {
+        method: "PUT",
+        headers: this.headersJSON,
+        body: JSON.stringify({
+          "notice": notice
+        })
+      });
+      let result = await response.json();
+      return result;
+    } catch(err) { console.log(err); return undefined; }
+  }
+
+
   // ----- Secure HTTP requests -----------------------------------------------------------------
 
   /* Using GET /api/secure/schedules
@@ -620,7 +637,6 @@ export class HttpRequestsService {
 
 
   /* Using PUT /api/admin/dmca
-     Will return an object of 4 strings.
   */
   async updateDMCA(dmca_policy : String, aup_policy : String, takedown_policy : String) {
     try {
@@ -638,6 +654,43 @@ export class HttpRequestsService {
       return result;
     } catch(err) { console.log(err); return undefined; }
   }
+
+
+  /* Using Get /api/admin/dmca/notices
+  */
+  async getDMCANotices() {
+    try {
+      const response = await fetch(this.serverURL + '/api/admin/dmca/notices', {
+        method: "GET",
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'authorization': localStorage.wtToken
+        }
+      });
+      let result = await response.json();
+      return result;
+    } catch(err) { console.log(err); return undefined; }
+  }
+
+
+  /* Using Delete /api/admin/dmca/notices
+  */
+  async deleteNotice(iat : String) {
+    try {
+      const response = await fetch(this.serverURL + '/api/admin/dmca/notices', {
+        method: "DELETE",
+        headers: this.headersJSON,
+        body: JSON.stringify({
+          "iat": iat,
+          "token": localStorage.wtToken
+        })
+      });
+      let result = await response.json();
+      return result;
+    } catch(err) { console.log(err); return undefined; }
+  }
+
 
 
   constructor() { }

@@ -1,4 +1,24 @@
 <div class="dmca-form">
+  <h2>Manage DMCA Notices/Appeals</h2>
+  <p>Read through the following DMCA notices, and manage User Reviews accordingly</p>
+  <p>Once an appeal or notice has been dealt with, remove it from the list</p>
+  <p>Tools to manage DMCA notices:</p>
+  <select id="notice-iat">
+    <option *ngFor="let notice of listNotices">{{notice.iat}}</option>
+  </select>
+  <br><br>
+  <button class="form-button" (click)="deleteNotice();">REMOVE</button>
+  <br><br>
+  <button class="form-button" (click)="redirectReviews();">REVIEWS</button>
+  <br><br><br><br>
+  <div class="review-item" *ngFor="let notice of listNotices">
+    <h3>Notice IAT: {{notice.iat}}</h3>
+    <p>Date Issued: {{notice.date}}</p>
+    <p><i>{{notice.notice}}</i></p>
+  </div>
+</div>
+
+<div class="dmca-form">
   <form onSubmit="return false;">
     <h3>DMCA Policies</h3>
     <br>

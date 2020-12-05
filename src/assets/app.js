@@ -59,6 +59,10 @@ usersDB.defaults({
 const reviewsDB = lowdb(new FileSync("review_database.json"));
 reviewsDB.defaults({"course_list": []}).write();
 
+//Database that stores the DMCA notices
+const dmcaDB = lowdb(new FileSync("dmca_notices.json"));
+dmcaDB.defaults({"notice_list": []}).write();
+
 
 //The various regex used in this api
 const regexSpecialChars = /^[^<>:/?#@\\/!$&'()*+,;=]*$/;
@@ -518,6 +522,32 @@ app.get('/api/common/dmca', (req, res) => {
     "aup_policy": aup_policy,
     "takedown_policy": takedown_policy
   })
+});
+
+
+//Allow anyone to add a DMCA notice
+app.put('/api/common/dmca/notices', (req, res) => {
+  const schema = joi.object({
+    "notice": joi.string().regex(regexDMCA).min(10).required()
+  });
+  const resultValidation = schema.validate(req.body);
+  if(resultValidation.error) {
+    res.status(400).send({
+      "message": "ERR_BAD_PARAMS"
+    });
+    return;
+  }
+
+  //Add the notice to the database
+  let notice_list = dmcaDB.get("notice_list").value();
+  notice_list.push({
+    "notice": req.body.notice,
+    "iat": Date.now()   //This will differentiate between the notices
+  })
+  dmcaDB.set("notice_list", notice_list).write();
+  res.send({
+    "message": "SUCCESS"
+  });
 });
 
 
@@ -1806,6 +1836,98 @@ app.put('/api/admin/dmca', (req, res) => {
   //Send a success message unconditionally
   res.send({
     "message": "SUCCESS"
+  });
+});
+
+
+//Get all DMCA notices
+app.get('/api/admin/dmca/notices', (req, res) => {
+  //Input sanitization -- Make sure token is sent via header
+  const schema = joi.string().regex(regexJWT);
+  const resultValidation = schema.validate(req.headers['authorization']);
+  if(resultValidation.error) {
+    res.status(400).send({
+      "message": "ERR_BAD_HEADER"
+    });
+    return;
+  }
+
+  //Verify token
+  let decoded = undefined;   //This will be the token data
+  let token = req.headers['authorization'];
+  try {
+    decoded = jwt.verify(token, secure_info.jwt_secure_key);
+  } catch(err) {
+    res.status(403).send({
+      "message": "ERR_DENIED"
+    });
+    return;
+  }
+  //Check if the user is an admin
+  if(!decoded.admin) {
+    res.status(403).send({
+      "message": "ERR_DENIED"
+    });
+    return;
+  }
+
+  //Send all notices to admin
+  let notice_list = dmcaDB.get("notice_list").value();
+  res.send({
+    "message": "SUCCESS",
+    "content": notice_list
+  });
+});
+
+
+//Delete a DMCA notice
+app.delete('/api/admin/dmca/notices', (req, res) => {
+  //Input sanitization -- Make sure all required parameters are present
+  const schema = joi.object({
+    "iat": joi.number(),      //Differentiator
+    "token": joi.string().regex(regexJWT).required()
+  });
+  const resultValidation = schema.validate(req.body);
+  if(resultValidation.error) {
+    res.status(400).send({
+      "message": "ERR_BAD_BODY"
+    });
+    return;
+  }
+
+  //Verify token
+  let decoded = undefined;   //This will be the token data
+  let token = req.body.token;
+  try {
+    decoded = jwt.verify(token, secure_info.jwt_secure_key);
+  } catch(err) {
+    res.status(403).send({
+      "message": "ERR_DENIED"
+    });
+    return;
+  }
+  //Check if the user is an admin
+  if(!decoded.admin) {
+    res.status(403).send({
+      "message": "ERR_DENIED"
+    });
+    return;
+  }
+
+  let notice_list = dmcaDB.get("notice_list").value();
+  for(i = 0; i < notice_list.length; i++) {
+    if(notice_list[i].iat == req.body.iat) {
+      //Remove notice
+      notice_list.splice(i, 1);
+      dmcaDB.set("notice_list", notice_list).write();
+      res.send({
+        "message": "SUCCESS"
+      });
+    }
+  }
+  //If not found
+  res.status(404).send({
+    "message": "ERR_RESULT_NOT_FOUND"
   });
 });
 

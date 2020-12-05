@@ -13,6 +13,7 @@ import { VerifiedPageComponent } from './verified-page/verified-page.component';
 import { AdminReviewComponent } from './admin-review/admin-review.component';
 import { AdminUsersComponent } from './admin-users/admin-users.component';
 import { AdminDmcaComponent } from './admin-dmca/admin-dmca.component';
+import { DmcaPanelComponent } from './dmca-panel/dmca-panel.component';
 
 const routes: Routes = [
   { path: 'home' , component: HomePageComponent },
@@ -27,6 +28,7 @@ const routes: Routes = [
   { path: 'admin/reviews' , component: AdminReviewComponent },
   { path: 'admin/users' , component: AdminUsersComponent },
   { path: 'admin/dmca' , component: AdminDmcaComponent },
+  { path: 'dmca' , component: DmcaPanelComponent },
   { path: '', redirectTo: 'home', pathMatch: 'full' }
 ];
 
