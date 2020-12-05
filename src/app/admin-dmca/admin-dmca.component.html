@@ -1,1 +1,17 @@
-<p>admin-dmca works!</p>
+<div class="dmca-form">
+  <form onSubmit="return false;">
+    <h3>DMCA Policies</h3>
+    <br>
+    <br>
+    <label for="dmca-policy-input">Privacy Policy</label>
+    <textarea id="dmca-policy-input" rows="4"></textarea>
+    <br><br>
+    <label for="aup-policy-input">AUP Policy</label>
+    <textarea id="aup-policy-input" rows="4"></textarea>
+    <br><br>
+    <label for="takedown-policy-input">Takedown Policy</label>
+    <textarea id="takedown-policy-input" rows="4"></textarea>
+    <br><br>
+    <button class="form-button" (click)="updateDMCA();">UPDATE</button>
+  </form>
+</div>

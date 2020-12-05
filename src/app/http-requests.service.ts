@@ -307,6 +307,21 @@ export class HttpRequestsService {
   }
 
 
+  /* Using GET /api/common/dmca
+     Will return an object of 4 strings.
+  */
+  async getDMCA() {
+    try {
+      const response = await fetch(this.serverURL + '/api/common/dmca', {
+        method: "GET",
+        headers: this.headersJSON
+      });
+      let result = await response.json();
+      return result;
+    } catch(err) { console.log(err); return undefined; }
+  }
+
+
   // ----- Secure HTTP requests -----------------------------------------------------------------
 
   /* Using GET /api/secure/schedules
@@ -595,6 +610,27 @@ export class HttpRequestsService {
         headers: this.headersJSON,
         body: JSON.stringify({
           "email": email,
+          "token": localStorage.wtToken
+        })
+      });
+      let result = await response.json();
+      return result;
+    } catch(err) { console.log(err); return undefined; }
+  }
+
+
+  /* Using PUT /api/admin/dmca
+     Will return an object of 4 strings.
+  */
+  async updateDMCA(dmca_policy : String, aup_policy : String, takedown_policy : String) {
+    try {
+      const response = await fetch(this.serverURL + '/api/admin/dmca', {
+        method: "PUT",
+        headers: this.headersJSON,
+        body: JSON.stringify({
+          "dmca_policy": dmca_policy,
+          "aup_policy": aup_policy,
+          "takedown_policy": takedown_policy,
           "token": localStorage.wtToken
         })
       });

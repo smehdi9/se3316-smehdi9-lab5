@@ -15,6 +15,12 @@ const timetable = require("./Lab3-timetable-data.json");      //All timetable da
 const secure_info = require("./secure_info.json");
 
 
+//DMCA policy strings
+let dmca_policy = secure_info.dmca_policy;
+let aup_policy = secure_info.aup_policy;
+let takedown_policy = secure_info.takedown_policy;
+
+
 //The users db/json file -----
 /*
 User JSON file will keep the list of their information as well as schedule_lists
@@ -56,6 +62,7 @@ reviewsDB.defaults({"course_list": []}).write();
 
 //The various regex used in this api
 const regexSpecialChars = /^[^<>:/?#@\\/!$&'()*+,;=]*$/;
+const regexDMCA = /^[^<>/?#@\\/!$&'*+;=]*$/;
 const regexEmail = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
 /*
@@ -501,6 +508,18 @@ app.put("/api/user/verify/resend", async(req, res) => {
 
 
 /* --------- COMMON ROUTES --------- */
+
+//Get all the DMCA policies
+app.get('/api/common/dmca', (req, res) => {
+  //Simply send the string values to the front-end
+  res.send({
+    "message": "SUCCESS",
+    "dmca_policy": dmca_policy,
+    "aup_policy": aup_policy,
+    "takedown_policy": takedown_policy
+  })
+});
+
 
 //For a given subject, return all the catalog_nbr's, just the numbers
 app.get('/api/common/timetable/:subject', (req, res) => {
@@ -1734,6 +1753,60 @@ app.post('/api/admin/users/enable', (req, res) => {
     "message": "ERR_RESULT_NOT_FOUND"
   });
   return;
+});
+
+
+//Edit the DMCA policies ----------------
+app.put('/api/admin/dmca', (req, res) => {
+  //Input sanitization -- Make sure all required parameters are present
+  const schema = joi.object({
+    "dmca_policy": joi.string().min(1).regex(regexDMCA),
+    "aup_policy": joi.string().min(1).regex(regexDMCA),
+    "takedown_policy": joi.string().min(1).regex(regexDMCA),
+    "token": joi.string().regex(regexJWT).required()
+  });
+  const resultValidation = schema.validate(req.body);
+  if(resultValidation.error) {
+    res.status(400).send({
+      "message": "ERR_BAD_BODY"
+    });
+    return;
+  }
+
+  //Verify token
+  let decoded = undefined;   //This will be the token data
+  let token = req.body.token;
+  try {
+    decoded = jwt.verify(token, secure_info.jwt_secure_key);
+  } catch(err) {
+    res.status(403).send({
+      "message": "ERR_DENIED"
+    });
+    return;
+  }
+  //Check if the user is an admin
+  if(!decoded.admin) {
+    res.status(403).send({
+      "message": "ERR_DENIED"
+    });
+    return;
+  }
+
+  //If any of the DMCA policies are provided, set the current ones to them
+  if(req.body.dmca_policy != null) {
+    dmca_policy = req.body.dmca_policy;
+  }
+  if(req.body.aup_policy != null) {
+    aup_policy = req.body.aup_policy;
+  }
+  if(req.body.takedown_policy != null) {
+    takedown_policy = req.body.takedown_policy;
+  }
+
+  //Send a success message unconditionally
+  res.send({
+    "message": "SUCCESS"
+  });
 });
 
 

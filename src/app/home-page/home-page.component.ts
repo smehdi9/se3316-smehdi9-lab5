@@ -21,6 +21,20 @@ export class HomePageComponent implements OnInit {
     window.location.replace('/login');   //Redirect to login
   }
 
+  //Show DMCA policies in DOM
+  async showDMCA() {
+    let result = await this.httpService.getDMCA();
+    //Only if DMCA policies are received
+    if(result.message == "SUCCESS") {
+      alert(result.dmca_policy);
+      alert(result.aup_policy);
+      alert(result.takedown_policy);
+    }
+    else {
+      console.log("There was an error :(");
+    }
+  }
+
   //Remove the login button on home page if already logged in
   async ngOnInit() {
     //If the user is already logged in,

@@ -41,6 +41,11 @@ export class UserPanelComponent implements OnInit {
     window.location.replace('/admin/users');
   }
 
+  //Redirect to admin DMCA panel (Only accessible for admins)
+  adminDMCAPanel() {
+    window.location.replace('/admin/dmca');
+  }
+
 
   //On init
   async ngOnInit() {

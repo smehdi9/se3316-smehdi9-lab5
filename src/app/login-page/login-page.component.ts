@@ -8,6 +8,7 @@ import { HttpRequestsService } from '../http-requests.service';
 })
 export class LoginPageComponent implements OnInit {
 
+  //HTTP service
   httpService : HttpRequestsService = new HttpRequestsService();
 
   //Proper email and password format

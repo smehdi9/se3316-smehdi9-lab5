@@ -139,6 +139,7 @@ input, select {
 }
 
 textarea {
+  width: 90%;
   display: inline-block;
   border: 1px solid #ccc;
   border-radius: 4px;
